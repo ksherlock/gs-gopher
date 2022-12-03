@@ -1,0 +1,447 @@
+#include "Types.rez"
+#include "defines.h"
+
+
+resource rVersion (0x1) {
+	{
+		0x0,
+		0x0,
+		0x0,
+		alpha,
+		0x0
+	},
+	verUS,
+	"Gopher",
+	"(C) 2022 Kelvin W Sherlock "
+};
+
+resource rComment(0x1) {
+	"Gopher"
+	"\$0D"
+	"\$0D"
+	"This program contains material from the ORCA/C "
+	"Run-Time Libraries, copyright 1987-2022 by Byte Works, Inc. "
+	"Used with Permission."
+	"\$0D"
+};
+
+resource rToolStartup (kStartStopID) {
+	$C080, /* set master SCB to mode640 + fFastPortAware + fUseShadowing */
+	{
+		3,$0000,      /* misc tools */
+		4,$0307,      /* quickdraw require sys 6.0+*/
+		5,$0000,      /* desk manager */
+		6,$0000,      /* eventMgr */
+		11,$0000,      /* int math */
+		14,$0000,      /* Window Manager */
+		15,$0000,      /* Menu Manager */
+		16,$0000,      /* Control Manager */
+		18,$0000,      /* QD Aux */
+		19,$0000,      /* print manager */
+		20,$0000,      /* LineEdit tool set */
+		21,$0000,      /* Dialog Manager */
+		22,$0000,      /* Scrap manager */
+		23,$0000,      /* standard file */
+		27,$0000,      /* Font manager */
+		28,$0000,      /* list manager */
+		34,$0000,      /* text edit */
+	}
+};
+
+resource rMenuBar (kMenuBarID) {
+	{
+		kAppleMID,
+		kFileMID,
+		kEditMID,
+		kNetworkMID
+	};
+};
+
+resource rMenu (kAppleMID, nocrossbank){
+	kAppleMID,
+	0xA008,
+	kAppleMID,
+	{ kAbout };
+};
+
+resource rMenu (kFileMID, nocrossbank){
+	kFileMID,
+	0xA008,
+	kFileMID,
+	{
+		kOpenItem,
+		kSaveItem,
+		kCloseItem,
+		kPageSetupItem,
+		kPrintItem,
+		kQuitItem
+	};
+};
+
+
+resource rMenu (kEditMID, nocrossbank){
+    kEditMID,
+    0xA008,
+    kEditMID,
+    {
+        kUndoItem,
+        kCutItem,
+        kCopyItem,
+        kPasteItem,
+        kClearItem
+    };
+};
+
+resource rMenu (kNetworkMID, nocrossbank){
+	kNetworkMID,
+	0xA008,
+	kNetworkMID,
+	{
+		kConnectItem,
+		kDisconnectItem,
+		kNetworkStatusItem
+	};
+};
+
+resource rMenuItem (kUndoItem, nocrossbank){
+    kUndoItem,
+    "Z",
+    "z",
+    0,
+    0x8040,
+    kUndoItem
+};
+
+resource rMenuItem (kCutItem, nocrossbank)
+{
+    kCutItem,
+    "X",
+    "x",
+    0,
+    0x8000,
+    kCutItem
+};
+
+resource rMenuItem (kCopyItem, nocrossbank){
+    kCopyItem,
+    "C",
+    "c",
+    0,
+    0x8000,
+    kCopyItem
+};
+
+resource rMenuItem (kPasteItem, nocrossbank){
+    kPasteItem,
+    "V",
+    "v",
+    0,
+    0x8000,
+    kPasteItem
+};
+
+
+resource rMenuItem (kClearItem, nocrossbank){
+    kClearItem,
+    "",
+    "",
+    0,
+    0x8000,
+    kClearItem
+};
+
+resource rMenuItem (kAbout, nocrossbank){
+	kAbout,
+	"",
+	"",
+	0,
+	0x8040,
+	kAbout
+};
+
+resource rMenuItem (kPreferences, nocrossbank){
+	kPreferences,
+	",",
+	",",
+	0,
+	0x8000,
+	kPreferences
+};
+
+resource rMenuItem (kOpenItem, nocrossbank){
+	kOpenItem,
+	"O",
+	"o",
+	0,
+	0x8000,
+	kOpenItem
+};
+
+resource rMenuItem (kSaveItem, nocrossbank){
+	kSaveItem,
+	"S",
+	"s",
+	0,
+	0x8000,
+	kSaveItem
+};
+
+
+resource rMenuItem (kCloseItem, nocrossbank){
+	kCloseItem,
+	"W",
+	"w",
+	0,
+	0x8040,
+	kCloseItem
+};
+
+
+
+resource rMenuItem (kPageSetupItem, nocrossbank){
+	kPageSetupItem,
+	"",
+	"",
+	0,
+	0x8000,
+	kPageSetupItem    
+};
+
+resource rMenuItem (kPrintItem, nocrossbank){
+	kPrintItem,
+	"P",
+	"p",
+	0,
+	0x8040,
+	kPrintItem    
+};
+
+
+resource rMenuItem (kQuitItem, nocrossbank){
+	kQuitItem,
+	"Q",
+	"q",
+	0,
+	0x8000,
+	kQuitItem    
+};
+
+
+resource rMenuItem (kConnectItem, nocrossbank)
+{
+    kConnectItem,
+    "",
+    "",
+    0,
+    0x8000,
+    kConnectItem
+};
+
+resource rMenuItem (kDisconnectItem, nocrossbank)
+{
+    kDisconnectItem,
+    "",
+    "",
+    0,
+    0x8000,
+    kDisconnectItem
+};
+
+resource rMenuItem (kNetworkStatusItem, nocrossbank)
+{
+    kNetworkStatusItem,
+    "",
+    "",
+    0,
+    0x8000,
+    kNetworkStatusItem
+};
+
+
+resource rPString (kAppleMID, nocrossbank){"@"};
+resource rPString (kFileMID, nocrossbank){" File "};
+resource rPString (kEditMID, nocrossbank){" Edit "};
+resource rPString (kNetworkMID, nocrossbank){" Network "};
+
+
+resource rPString (kAbout, nocrossbank){"About..."};
+resource rPString (kPreferences, nocrossbank){"Preferences..."};
+
+resource rPString (kOpenItem, nocrossbank){"Open..."};
+resource rPString (kSaveItem, nocrossbank){"Save"};
+resource rPString (kCloseItem, nocrossbank){"Close"};
+resource rPString (kPageSetupItem, nocrossbank){"Page Setup"};
+resource rPString (kPrintItem, nocrossbank){"Print"};
+resource rPString (kQuitItem, nocrossbank){"Quit"};
+
+resource rPString (kUndoItem, nocrossbank){"Undo"};
+resource rPString (kCutItem, nocrossbank){"Cut"};
+resource rPString (kCopyItem, nocrossbank){"Copy"};
+resource rPString (kPasteItem, nocrossbank){"Paste"};
+resource rPString (kClearItem, nocrossbank){"Clear"};
+
+
+resource rPString (kConnectItem, nocrossbank){"Connect"};
+resource rPString (kDisconnectItem, nocrossbank){"Disconnect"};
+resource rPString (kNetworkStatusItem, nocrossbank){"Status..."};
+
+
+/*
+ gopher window
+*/
+
+#define WindowWidth 560
+#define WindowHeight 150 
+
+resource rWindParam1 (kIndexWindow) {
+	fTitle + fMove + fVis,
+	kIndexWindow, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	kIndexWindow, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{40, 40, 190, 600}, /* wPosition */
+	infront,
+	kGopherIndex, /* rControlList */
+	(refIsResource << 10) + /* color table */
+	(refIsResource << 8) + /* title */ 
+	singleResource /* control descriptor */
+};
+
+
+resource rWindParam1 (kURLWindow) {
+	fAlert + fVis,
+	0, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	0, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{50, 40, 70, 600}, /* wPosition */
+	infront,
+	kGopherURL, /* rControlList */
+	(refIsPtr << 10) + /* color table */
+	(refIsPtr << 8) + /* title */ 
+	singleResource /* control descriptor */
+};
+
+
+resource rPString (kIndexWindow, nocrossbank){" Gopher "};
+
+resource rWindColor (kIndexWindow) {
+	0x0, /* frame color */
+	0xF00, /* title color */
+	0x20F, /* title bar color */
+	0xF0FF, /* grow color */
+	0xF0 /* info color */
+};
+
+/*
+resource rControlList (kIndexWindow) {
+	{
+		kGopherIndex,
+	}
+};
+*/
+
+#define leKeyIsSpecial 0x8000
+#define leKeyIsNumber 0x4000
+#define leKeyIsHex 0x2000
+#define leKeyIsAlpha 0x1000
+#define leKeyIsNonControl 0x0800
+
+resource rControlTemplate (kGopherURL) {
+	kGopherURL,
+	// {3, 4, 17, 556 },
+	{ -1, -1, 21, 561 },
+	editLineControl {
+		 {	/* optional Fields */
+			0x0, /* flags */
+			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr, /* more flags */
+			0x0, /* ref con */
+			255, /* max size */
+			0, /* default text */
+			-1 /* password char (not a password field) */
+			//0 /* leKeyIsNonControl */ /* classify key filter */
+		}
+	}
+};
+
+#define fListString 0x0001
+#define fListSelect 0x0002
+#define fListScrollBar 0x0004
+
+resource rControlTemplate (kGopherIndex) {
+	kGopherIndex,
+	{19, -2, 190, 601 },
+	ListControl {
+		 {	/* optional Fields */
+			0x0, /* flags */
+			FctlProcNotPtr+FctlIsMultiPart, /* more flags */
+			0x0, /* ref con */
+			0, /* list size */
+			5, /* list view */
+			fListSelect, /* list type */
+			0, /* list start */
+			10, /* list mem height */
+			16, /* list mem size */
+			0x0, /* list ref */
+			0x0, /* list color ref */
+		}
+	}
+};
+
+
+
+type rAlertString {
+
+	switch {
+		case sizeCustom:
+			key byte = 0x30;
+			rect;
+		case size30: key byte = 0x31;
+		case size60: key byte = 0x32;
+		case size110: key byte = 0x33;
+		case size175: key byte = 0x34;
+		case size110: key byte = 0x35;
+		case size40: key byte = 0x36;
+		case size200: key byte = 0x37;
+		case size250: key byte = 0x38;
+		case size300: key byte = 0x39;
+	};
+
+	switch {
+		case iconNone: key byte = 0x30;
+		case iconCustom:
+			key byte = 0x31;
+			longint;
+			int;
+			int;
+		case iconStop: key byte = 0x32;
+		case iconNote: key byte = 0x33;
+		case iconCaution: key byte = 0x34;
+		case iconDisk: key byte = 0x35;
+		case iconDiskSwap: key byte = 0x36;
+	};
+
+	string;
+	string = $"00";
+};
+
+resource rAlertString(1) {
+
+	size30 {},
+	iconNone {},
+	"~Gopher 1.0~^#0"
+};
