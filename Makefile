@@ -24,10 +24,10 @@ gopher: $(OBJS) $(ROBJ)
 o:
 	mkdir o
 
-o/gopher.o : gopher.c defines.h
+o/gopher.o : gopher.c defines.h gopher.h
 o/index.o: index.c defines.h
 o/url.o: url.c url.h
-o/gopher-url.o: gopher-url.c gopher-url.h
+o/gopher-url.o: gopher-url.c gopher.h
 
 o/gopher.r: gopher.rez defines.h
 

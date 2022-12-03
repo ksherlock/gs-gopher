@@ -24,7 +24,6 @@
 // #include "url.h"
 #include "gopher.h"
 
-#include "gopher-url.h"
 
 
 unsigned MyID;
@@ -64,59 +63,6 @@ static WmTaskRec event;
 unsigned Quit = 0;
 
 
-// allocate a window cookie
-window_cookie *alloc_window_cookie(url *u, char *src) {
-
-	window_cookie *c;
-	char *cp;
-	unsigned i;
-
-	unsigned hlen = u->host.length;
-	unsigned slen = u->selector.length;
-
-	unsigned extra = 3 + 3 + (slen << 1) + (hlen << 1);
-
-	c = malloc(sizeof(window_cookie) + extra);
-	memset(c, 0, sizeof(window_cookie) + extra);
-	c->type = u->type;
-	c->port = u->port;
-
-	// window title = host - selector
-
-	cp = c->data;
-	c->title = cp;
-	if (slen) {
-		*cp++ = hlen;
-		memcpy(cp, src + u->host.begin, hlen);
-		cp += hlen;
-	} else {
-		unsigned length = hlen + slen + 3;
-		*cp++ = (hlen + slen + 3); // overflow?
-
-		memcpy(cp, src + u->host.begin, hlen);
-		cp += hlen;
-		*cp++ = ' ';
-		*cp++ = '-';
-		*cp++ = ' ';
-		memcpy(cp, src + u->selector.begin, slen);
-		cp += slen;
-	}
-
-	c->host = cp;
-	*cp++ = hlen;
-	memcpy(cp, src + u->host.begin, hlen);
-	cp += hlen;
-
-	if (slen) {
-		c->selector = cp;
-		*cp++ = slen;
-		memcpy(cp, src + u->selector.begin, slen);
-	} else {
-		c->selector = NULL;
-	}
-
-	return c;
-}
 
 enum {
 	kOpenReturn = 1,
@@ -194,12 +140,12 @@ void DoOpen(void) {
 
 	static char text[256];
 	// static URLComponents uc;
-	url u;
+
+	window_cookie *cookie = NULL;
 
 	CtlRecHndl ctrlH;
 	LERecHndl leH;
 
-	unsigned ok = 0;
 	GrafPortPtr win = NewWindow2(NULL, NULL, NULL, NULL, refIsResource, kURLWindow, rWindParam1);
 
 	ctrlH = GetCtlHandleFromID(win, kGopherURL);
@@ -231,63 +177,33 @@ void DoOpen(void) {
 					break;
 				case kOpenEscape:
 					quit = 1;
-					ok = 0;
 					break;
 				case kOpenReturn:
 					GetLETextByID(win, kGopherURL, (StringPtr)text);
 					if (!text[0]) break;
 
-					if (!parse_gopher_url(text + 1, text[0], &u)) {
+					cookie = parse_url(text + 1, text[0]);
+					if (cookie) {
+						quit = 1;
+					} else {
 						SysBeep2(sbBadInputValue);
-						break;
 					}
-					#if 0
-					if (!ParseURL(text + 1, text[0], &uc))
-						break;
-
-					if (uc.schemeType != SCHEME_NONE && uc.schemeType != SCHEME_GOPHER) {
-						SysBeep2(sbBadInputValue);
-						break;
-					}
-					#endif
-					quit = 1;
-					ok = 1;
 					break;
 
 			}
 			if (quit) break;
 		}
 
-		#if 0
-		if (event.what == keyDownEvt || event.what == autoKeyEvt) {
-			if (event.message == 0x0d) {
-				GetLETextByID(win, kGopherURL, (StringPtr)text);
-				if (*text) {
-					/* check if url looks valid? */
-					ok = 1;
-					break;
-				}
-			}
-			if (event.message == 0x1b) {
-				break;
-			}
-		}
-		#endif
 	}
 	CloseWindow(win); // or just hide so url is retained?
 	InitCursor(); /* reset possible I-beam cursor */
 
-	if (ok) {
-		// classify url - index, text, or binary
-		window_cookie *cookie = alloc_window_cookie(&u, text);
-
-
+	if (cookie) {
 		if (cookie->type == kGopherTypeText) {
 			GrafPortPtr win;
 			win = NewWindow2((Pointer)cookie->title, (Long)cookie, NULL, NULL, refIsResource, kTextWindow, rWindParam1);
+			// SetInfoRefCon((Long)cookie, win);
 		}
-
-
 	}
 
 	// event.wmTaskMask = 0x001FFFFF;

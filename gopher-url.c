@@ -6,74 +6,72 @@
 #pragma noroot
 #pragma optimize 79
 
-#include "gopher-url.h"
+#include "gopher.h"
+
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
-int parse_gopher_url(const char *cp, unsigned length, url *url) {
+
+typedef struct range {
+	unsigned location;
+	unsigned length;
+} range;
+
+typedef struct url {
+	range host;
+	range selector;
+	unsigned port;
+	unsigned type;
+} url;
+
+
+window_cookie *parse_url(const char *cp, unsigned length) {
 
 	// leading gopher:// is optional.
 	// any other scheme is an error.
 	// unsigned bits = 0;
 	unsigned i;
 
-#if 0
-	// search for ://
-	for (i = 0; i < length; ++i) {
-		bits <<= 2;
-		unsigned c = cp[0];
-		if (c == ':') {
-			bits |= 0b01;
-		} else if (c == '/') {
-			bits |= 0b11;
-			if ((bits & 0b00111111) == 0b00011111) {
-				// match!
-				i = i - 3;
-				if (strncmp(cp, "gopher://", ))
-				break;
-			}
-		}
-	}
-#endif
-
 	// expect host [:port] /
-	range host = {};
-	range selector = {};
+	range host = { 0, 0 };
+	range selector = { 0, 0 };
 	unsigned port = 70;
+	unsigned type = '1';
 	unsigned st;
-
-	i = 0;
-	if (length >= 9 && !memcmp(cp, "gopher://", 9)) {
-		// cp += 9;
-		// length -= 9;
-		i = 9;
-	}
+	unsigned extra;
+	window_cookie *cookie;
+	char *p;
 
 	st = 0;
-	host.begin = i;
-	for (; i < length; ++i) {
+	if (length >= 9 && !memcmp(cp, "gopher://", 9)) {
+		cp += 9;
+		length -= 9;
+	}
+
+	for (i = 0; i < length; ++i) {
 		unsigned c = cp[i];
 		switch(st) {
 			case 0:
-				if (c == ':') {
-					host.length = i - host.begin;
+				if (c == '/') {
+					host.length = i - host.location;
+					st = 3;
+				}
+				else if (c == ':') {
+					host.length = i - host.location;
 					port = 0;
 					st = 2;
-				}
-				else if (c == '/') {
-					host.length = i - host.begin;
-					st = 3;
 				}
 				break;
 
 			case 1:
 				// host
 				if (c == '/') {
-					host.length = i - host.begin;
+					host.length = i - host.location;
 					st = 3;
 				}
 				else if (c == ':') {
-					host.length = i - host.begin;
+					host.length = i - host.location;
 					port = 0;
 					st = 2;
 				}
@@ -86,15 +84,16 @@ int parse_gopher_url(const char *cp, unsigned length, url *url) {
 					port += (c & 0x0f);
 				}
 				else if (c == '/') {
-					if (port == 0) return 0;
+					// catches http://
+					if (port == 0) return NULL;
 					st = 3;
-				} else return 0;
+				} else return NULL;
 				break;
 
 			case 3:
 				// type
-				url->type = c;
-				selector.begin = i + 1;
+				type = c;
+				selector.location = i + 1;
 				++st;
 				break;
 			case 4:
@@ -104,15 +103,55 @@ int parse_gopher_url(const char *cp, unsigned length, url *url) {
 	}
 
 	if (st <= 1) {
-		host.length = length - host.begin;
-		url->type = '1';
+		host.length = length - host.location;
 	}
 	if (st == 4) {
-		selector.length = length - selector.begin;
+		selector.length = length - selector.location;
 	}
-	url->port = port;
-	url->host = host;
-	url->selector = selector;
 
-	return 1;
+
+	extra = 3 + 3 + 2 + (host.length << 1) + (selector.length << 1);
+
+	cookie = malloc(sizeof(window_cookie) + extra);
+	if (!cookie) return NULL;
+
+	memset(cookie, 0, sizeof(window_cookie) + extra);
+
+	cookie->type = type;
+	cookie->port = port;
+
+	p = cookie->data;
+	cookie->title = p;
+	if (selector.length) {
+		// host + selector
+		*p++ = host.length + selector.length + 3 + 2;
+		*p++ = ' ';
+		memcpy(p, cp + host.location, host.length);
+		p += host.length;
+		*p++ = ' ';
+		*p++ = '-';
+		*p++ = ' ';
+		memcpy(p, cp + selector.location, selector.length);
+		p += selector.length;
+		*p++ = ' ';
+	} else {
+		// just the host
+		*p++ = host.length + 2;
+		*p++ = ' ';
+		memcpy(p, cp + host.location, host.length);
+		p += host.length;
+		*p++ = ' ';
+	}
+	cookie->host = p;
+	*p++ = host.length;
+	memcpy(p, cp + host.location, host.length);
+	p += host.length;
+
+	if (selector.length) {
+		cookie->selector = p;
+		*p++ = selector.length;
+		memcpy(p, cp + selector.location, selector.length);
+		p += selector.length;
+	}
+	return cookie;
 }
