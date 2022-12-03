@@ -30,6 +30,141 @@ unsigned MyID;
 
 static Pointer Icons[4];
 
+
+void TCPNewWindow(GrafPortPtr window, window_cookie *cookie) {
+
+	if (TCPIPValidateIPString(cookie->host)) {
+		cvtRec cvt;
+		unsigned err;
+
+		TCPIPConvertIPToHex(&cvt, cookie->host);
+		cookie->dnr.DNRstatus = DNR_OK;
+		cookie->dnr.DNRIPaddress = cvt.cvtIPAddress;
+		cookie->state = kStateDNR; // handle later
+#if 0
+		cookie->state = kStateConnect;
+		cookie->ipid = TCPIPLogin(MyID, cvt.cvtIPAddress, cookie->port, 0, 64);
+		if (_toolErr) {
+			cookie->state = kStateError;
+		}
+		err = TCPIPOpenTCP(cookie->ipid);
+#endif
+	} else {
+		TCPIPDNRNameToIP(cookie->host, &cookie->dnr);
+		cookie->state = kStateDNR;
+	}
+}
+
+void TCPCloseWindow(GrafPortPtr window, window_cookie *cookie) {
+
+	switch(cookie->state) {
+	case kStateError:
+	case kStateComplete:
+		break;
+	case kStateDNR:
+		TCPIPCancelDNR(&cookie->dnr);
+		break;
+	case kStateConnect:
+	case kStateRead:
+	case kStateClosing:
+		TCPIPAbortTCP(cookie->ipid);
+		TCPIPLogout(cookie->ipid);
+		cookie->ipid = 0;
+		break;
+	}
+}
+
+void TCPProcessWindow(GrafPortPtr window, window_cookie *cookie) {
+
+	unsigned err;
+	srBuff sr;
+	unsigned ipid = cookie->ipid;
+
+	switch (cookie->state) {
+		case kStateError:
+		case kStateComplete:
+			break;
+
+		case kStateDNR:
+			if (cookie->dnr.DNRstatus == DNR_OK) {
+				cookie->state = kStateConnect;
+
+				ipid = TCPIPLogin(MyID, cookie->dnr.DNRIPaddress, cookie->port, 0, 64);
+				if (_toolErr) {
+					cookie->state = kStateError;
+					return;
+				}
+				err = TCPIPOpenTCP(ipid);
+				if (_toolErr || err) {
+					TCPIPLogout(ipid);
+					cookie->state = kStateError;
+					return;
+				}
+				cookie->ipid = ipid;
+				break;
+			}
+			if (cookie->dnr.DNRstatus == DNR_Pending) return;
+			// timeout / no dns
+			cookie->state = kStateError;
+			break;
+
+		case kStateConnect:
+			err = TCPIPStatusTCP(ipid, &sr);
+			if (sr.srState == TCPSESTABLISHED) {
+				unsigned char *selector = cookie->selector;
+				cookie->state = kStateRead;
+				if (selector)
+					err = TCPIPWriteTCP(ipid, selector+1, selector[0], 0, 0);
+				err = TCPIPWriteTCP(ipid, "\r\n", 2, 1, 0);
+				cookie->state = kStateRead;
+			}
+			else if (sr.srState == TCPSCLOSED) {
+				// reset??
+				TCPIPLogout(ipid);
+				cookie->ipid = 0;
+				cookie->state = kStateError;
+			}
+			else if (sr.srState > TCPSESTABLISHED) {
+				// closing
+				cookie->state = kStateError;
+			}
+			break;
+
+		case kStateRead:
+			err = TCPIPStatusTCP(ipid, &sr);
+			if (sr.srRcvQueued) {
+
+			}
+
+			if (sr.srState == TCPSCLOSED) {
+				// reset??
+				TCPIPLogout(ipid);
+				cookie->ipid = 0;
+				cookie->state = kStateError;
+			}
+			else if (sr.srState > TCPSESTABLISHED) {
+				// closing...
+				TCPIPCloseTCP(ipid);
+				cookie->state = kStateClosing;
+			}
+			break;
+		case kStateClosing:
+			err = TCPIPStatusTCP(ipid, &sr);
+			if (sr.srState == TCPSTIMEWAIT) {
+				TCPIPAbortTCP(ipid);
+				TCPIPLogout(ipid);
+				cookie->ipid = 0;
+				cookie->state = kStateComplete;
+			}
+			if (sr.srState == TCPSCLOSED) {
+				TCPIPLogout(ipid);
+				cookie->ipid = 0;
+				cookie->state = kStateComplete;				
+			}
+			break;
+	}
+}
+
 static void Setup(void) {
 
 	/* menu bars */
@@ -199,10 +334,16 @@ void DoOpen(void) {
 	InitCursor(); /* reset possible I-beam cursor */
 
 	if (cookie) {
-		if (cookie->type == kGopherTypeText) {
+		unsigned long id = 0;
+		if (cookie->type == kGopherTypeText) id = kTextWindow;
+		if (cookie->type == kGopherTypeIndex) id = kIndexWindow;
+		if (id) {
 			GrafPortPtr win;
-			win = NewWindow2((Pointer)cookie->title, (Long)cookie, NULL, NULL, refIsResource, kTextWindow, rWindParam1);
-			// SetInfoRefCon((Long)cookie, win);
+			win = NewWindow2((Pointer)cookie->title, (Long)cookie, NULL, NULL, refIsResource, id, rWindParam1);
+			SetInfoRefCon((Long)cookie, win);
+
+		} else {
+			free(cookie);
 		}
 	}
 

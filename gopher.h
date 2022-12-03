@@ -1,11 +1,21 @@
 
 #include <tcpip.h>
 
+enum {
+	kStateComplete = 0,
+	kStateDNR,
+	kStateConnect,
+	kStateRead,
+	kStateClosing,
+	kStateError
+};
+
 typedef struct window_cookie {
 	dnrBuffer dnr;
 	unsigned port;
 	unsigned type;
 	unsigned ipid;
+	unsigned state;
 	char *title; // window title
 	char *host;
 	char *selector;
