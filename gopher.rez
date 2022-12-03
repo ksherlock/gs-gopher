@@ -315,6 +315,28 @@ resource rWindParam1 (kIndexWindow) {
 };
 
 
+resource rWindParam1 (kTextWindow) {
+	fTitle + fMove + fVis,
+	kTextWindow, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	kTextWindow, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{40, 40, 190, 600}, /* wPosition */
+	infront,
+	kGopherText, /* rControlList */
+	(refIsResource << 10) + /* color table */
+	(refIsResource << 8) + /* title */ 
+	singleResource /* control descriptor */
+};
+
+
 resource rWindParam1 (kURLWindow) {
 	fAlert + fVis,
 	0, /* title id */
@@ -338,6 +360,7 @@ resource rWindParam1 (kURLWindow) {
 
 
 resource rPString (kIndexWindow, nocrossbank){" Gopher "};
+resource rPString (kTextWindow, nocrossbank){" Gopher "};
 
 resource rWindColor (kIndexWindow) {
 	0x0, /* frame color */
@@ -347,13 +370,15 @@ resource rWindColor (kIndexWindow) {
 	0xF0 /* info color */
 };
 
-/*
-resource rControlList (kIndexWindow) {
-	{
-		kGopherIndex,
-	}
+resource rWindColor (kTextWindow) {
+	0x0, /* frame color */
+	0xF00, /* title color */
+	0x20F, /* title bar color */
+	0xF0FF, /* grow color */
+	0xF0 /* info color */
 };
-*/
+
+
 
 #define leKeyIsSpecial 0x8000
 #define leKeyIsNumber 0x4000
@@ -401,6 +426,30 @@ resource rControlTemplate (kGopherIndex) {
 		}
 	}
 };
+
+
+resource rControlTemplate (kGopherText) {
+	kGopherText,
+	{19, -2, 190, 601 },
+	editTextControl {
+		 {	/* optional Fields */
+			0x0, /* flags */
+			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr+FctlIsMultiPart, /* more flags */
+			0x0, /* ref con */
+			fSingleStyle+fReadOnly+fDrawBounds, /* text flags */
+			{0xffff, 0xffff, 0xffff, 0xffff}, /* indent rect */
+			0xffffffff, /* horizontal bar */
+			0, // vertical amount
+			0, // horizontal bar
+			0, // horizontal amount
+			0, // style ref
+			0, // text descriptor
+			(refIsPtr << 3) + dataIsPString, // text ref
+			0 // text size
+		}
+	}
+};
+
 
 
 

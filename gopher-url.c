@@ -3,19 +3,14 @@
  *
  */
 
-struct range {
-	unsigned begin;
-	unsigned end;
-};
+#pragma noroot
+#pragma optimize 79
 
-struct gopher_url {
-	range host;
-	range selector;
-	unsigned port;
-	unsigned type;
-};
+#include "gopher-url.h"
+#include <string.h>
+#include <ctype.h>
 
-int parse_gopher_url(const char *cp, unsigned length, gopher_url *url) {
+int parse_gopher_url(const char *cp, unsigned length, url *url) {
 
 	// leading gopher:// is optional.
 	// any other scheme is an error.
@@ -42,12 +37,13 @@ int parse_gopher_url(const char *cp, unsigned length, gopher_url *url) {
 #endif
 
 	// expect host [:port] /
-	range host = {}
+	range host = {};
 	range selector = {};
 	unsigned port = 70;
+	unsigned st;
 
 	i = 0;
-	if (length >= 9 && !strncmp(cp, "gopher://")) {
+	if (length >= 9 && !memcmp(cp, "gopher://", 9)) {
 		// cp += 9;
 		// length -= 9;
 		i = 9;
@@ -60,12 +56,12 @@ int parse_gopher_url(const char *cp, unsigned length, gopher_url *url) {
 		switch(st) {
 			case 0:
 				if (c == ':') {
-					host.end = i - 1;
+					host.length = i - host.begin;
 					port = 0;
 					st = 2;
 				}
 				else if (c == '/') {
-					host.end = i - 1;
+					host.length = i - host.begin;
 					st = 3;
 				}
 				break;
@@ -73,11 +69,11 @@ int parse_gopher_url(const char *cp, unsigned length, gopher_url *url) {
 			case 1:
 				// host
 				if (c == '/') {
-					host.end = i - 1;
+					host.length = i - host.begin;
 					st = 3;
 				}
 				else if (c == ':') {
-					host.end = i -1;
+					host.length = i - host.begin;
 					port = 0;
 					st = 2;
 				}
@@ -108,11 +104,11 @@ int parse_gopher_url(const char *cp, unsigned length, gopher_url *url) {
 	}
 
 	if (st <= 1) {
-		host.end = length;
+		host.length = length - host.begin;
 		url->type = '1';
 	}
 	if (st == 4) {
-		selector.end = length;
+		selector.length = length - selector.begin;
 	}
 	url->port = port;
 	url->host = host;

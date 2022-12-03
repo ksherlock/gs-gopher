@@ -12,7 +12,7 @@ LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/index.o o/url.o o/scheme.o
+OBJS = o/gopher.o o/index.o o/gopher-url.o
 
 ROBJ = o/gopher.r
 
@@ -26,7 +26,8 @@ o:
 
 o/gopher.o : gopher.c defines.h
 o/index.o: index.c defines.h
-o/url.o : url.c url.h
+o/url.o: url.c url.h
+o/gopher-url.o: gopher-url.c gopher-url.h
 
 o/gopher.r: gopher.rez defines.h
 

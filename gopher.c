@@ -16,9 +16,15 @@
 #include <tcpip.h>
 #include <window.h>
 
-#include "defines.h"
-#include "url.h"
 
+#include <stdlib.h>
+#include <string.h>
+
+#include "defines.h"
+// #include "url.h"
+#include "gopher.h"
+
+#include "gopher-url.h"
 
 
 unsigned MyID;
@@ -56,6 +62,61 @@ Pointer IconForType(unsigned type) {
 
 static WmTaskRec event;
 unsigned Quit = 0;
+
+
+// allocate a window cookie
+window_cookie *alloc_window_cookie(url *u, char *src) {
+
+	window_cookie *c;
+	char *cp;
+	unsigned i;
+
+	unsigned hlen = u->host.length;
+	unsigned slen = u->selector.length;
+
+	unsigned extra = 3 + 3 + (slen << 1) + (hlen << 1);
+
+	c = malloc(sizeof(window_cookie) + extra);
+	memset(c, 0, sizeof(window_cookie) + extra);
+	c->type = u->type;
+	c->port = u->port;
+
+	// window title = host - selector
+
+	cp = c->data;
+	c->title = cp;
+	if (slen) {
+		*cp++ = hlen;
+		memcpy(cp, src + u->host.begin, hlen);
+		cp += hlen;
+	} else {
+		unsigned length = hlen + slen + 3;
+		*cp++ = (hlen + slen + 3); // overflow?
+
+		memcpy(cp, src + u->host.begin, hlen);
+		cp += hlen;
+		*cp++ = ' ';
+		*cp++ = '-';
+		*cp++ = ' ';
+		memcpy(cp, src + u->selector.begin, slen);
+		cp += slen;
+	}
+
+	c->host = cp;
+	*cp++ = hlen;
+	memcpy(cp, src + u->host.begin, hlen);
+	cp += hlen;
+
+	if (slen) {
+		c->selector = cp;
+		*cp++ = slen;
+		memcpy(cp, src + u->selector.begin, slen);
+	} else {
+		c->selector = NULL;
+	}
+
+	return c;
+}
 
 enum {
 	kOpenReturn = 1,
@@ -132,7 +193,8 @@ void OpenEventHook(WmTaskRec *event) {
 void DoOpen(void) {
 
 	static char text[256];
-	static URLComponents uc;
+	// static URLComponents uc;
+	url u;
 
 	CtlRecHndl ctrlH;
 	LERecHndl leH;
@@ -175,6 +237,11 @@ void DoOpen(void) {
 					GetLETextByID(win, kGopherURL, (StringPtr)text);
 					if (!text[0]) break;
 
+					if (!parse_gopher_url(text + 1, text[0], &u)) {
+						SysBeep2(sbBadInputValue);
+						break;
+					}
+					#if 0
 					if (!ParseURL(text + 1, text[0], &uc))
 						break;
 
@@ -182,6 +249,7 @@ void DoOpen(void) {
 						SysBeep2(sbBadInputValue);
 						break;
 					}
+					#endif
 					quit = 1;
 					ok = 1;
 					break;
@@ -211,11 +279,21 @@ void DoOpen(void) {
 
 	if (ok) {
 		// classify url - index, text, or binary
-		// 
+		window_cookie *cookie = alloc_window_cookie(&u, text);
+
+
+		if (cookie->type == kGopherTypeText) {
+			GrafPortPtr win;
+			win = NewWindow2((Pointer)cookie->title, (Long)cookie, NULL, NULL, refIsResource, kTextWindow, rWindParam1);
+		}
+
+
 	}
 
 	// event.wmTaskMask = 0x001FFFFF;
 }
+
+
 
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
