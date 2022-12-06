@@ -4,13 +4,14 @@
 enum {
 	kStateComplete = 0,
 	kStateDNR,
-	kStateConnect,
-	kStateRead,
+	kStateConnecting,
+	kStateReading,
 	kStateClosing,
 	kStateError
 };
 
 typedef struct window_cookie {
+	struct window_cookie *next;
 	dnrBuffer dnr;
 	unsigned port;
 	unsigned type;

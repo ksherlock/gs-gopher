@@ -316,7 +316,7 @@ resource rWindParam1 (kIndexWindow) {
 
 
 resource rWindParam1 (kTextWindow) {
-	fTitle + fMove + fVis,
+	fTitle + fMove + fClose + fInfo,
 	kTextWindow, /* title id */
 	0x0,
 	{0, 0, 0, 0},
@@ -327,7 +327,7 @@ resource rWindParam1 (kTextWindow) {
 	{0, 0},
 	{0, 0},
 	0,
-	0,
+	13, /* info height */
 	{40, 40, 190, 600}, /* wPosition */
 	infront,
 	kGopherText, /* rControlList */
@@ -430,13 +430,13 @@ resource rControlTemplate (kGopherIndex) {
 
 resource rControlTemplate (kGopherText) {
 	kGopherText,
-	{19, -2, 190, 601 },
+	{-1, -2, 190, 601 },
 	editTextControl {
 		 {	/* optional Fields */
 			0x0, /* flags */
-			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr+FctlIsMultiPart, /* more flags */
+			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr+FctlTellAboutSize+FctlIsMultiPart, /* more flags */
 			0x0, /* ref con */
-			fSingleStyle+fReadOnly+fDrawBounds, /* text flags */
+			fNoWordWrap+fGrowRuler+fSingleStyle+fReadOnly+fDrawBounds, /* text flags */
 			{0xffff, 0xffff, 0xffff, 0xffff}, /* indent rect */
 			0xffffffff, /* horizontal bar */
 			0, // vertical amount
