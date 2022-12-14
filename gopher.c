@@ -23,8 +23,8 @@
 
 #include "defines.h"
 // #include "url.h"
-#include "gopher.h"
-
+//#include "gopher.h"
+#include "q.h"
 
 
 const char *ReqName = "\pTCP/IP~kelvin~gopher~";
@@ -37,268 +37,17 @@ static Pointer Icons[4];
 unsigned window_count = 0;
 unsigned window_active = 0;
 GrafPortPtr windows[10];
-window_cookie *cookies[10];
 
 
-#pragma databank 1
 #pragma toolparms 1
+#pragma databank 1
+
 pascal void WindowDrawControls(void) {
 	DrawControls(GetPort());
 }
 
-pascal void DrawInfo(Rect *rectPtr, window_cookie *cookie, GrafPortPtr w) {
-
-	const char *name = "";
-	switch (cookie->state) {
-	case kStateError: name ="\pError"; break;
-	case kStateDNR: name = "\pDNR"; break;
-	case kStateConnecting: name = "\pConnecting"; break;
-	case kStateReading: name ="\pReading"; break;
-	case kStateClosing: name = "\pClosing"; break;
-	case kStateComplete: name ="\pComplete"; break;
-	default: name = "\p???"; break;
-	}
-
-	MoveTo(rectPtr->h1 + 2, rectPtr->v2 - 2);
-	DrawString(name);
-}
-
-
-#pragma databank 0
 #pragma toolparms 0
-
-void TCPNewWindow(GrafPortPtr window, window_cookie *cookie) {
-
-	if (TCPIPValidateIPString(cookie->host)) {
-		cvtRec cvt;
-		unsigned err;
-
-		TCPIPConvertIPToHex(&cvt, cookie->host);
-		cookie->dnr.DNRstatus = DNR_OK;
-		cookie->dnr.DNRIPaddress = cvt.cvtIPAddress;
-		cookie->state = kStateDNR; // handle later
-#if 0
-		cookie->state = kStateConnecting;
-		cookie->ipid = TCPIPLogin(MyID, cvt.cvtIPAddress, cookie->port, 0, 64);
-		if (_toolErr) {
-			cookie->state = kStateError;
-		}
-		err = TCPIPOpenTCP(cookie->ipid);
-#endif
-	} else {
-		TCPIPDNRNameToIP(cookie->host, &cookie->dnr);
-		cookie->state = kStateDNR;
-	}
-}
-
-void TCPCloseWindow(GrafPortPtr window, window_cookie *cookie) {
-
-	switch(cookie->state) {
-	case kStateError:
-	case kStateComplete:
-		break;
-	case kStateDNR:
-		TCPIPCancelDNR(&cookie->dnr);
-		break;
-	case kStateConnecting:
-	case kStateReading:
-	case kStateClosing:
-		TCPIPAbortTCP(cookie->ipid);
-		TCPIPLogout(cookie->ipid);
-		cookie->ipid = 0;
-		break;
-	}
-}
-
-// read.
-// binary files are as-is
-// index/text files should have \r\n after each line,
-// end with .\r\n
-// (but \n might be missing and )
-void TCPRead(GrafPortPtr window, window_cookie *cookie, unsigned long available) {
-
-	static char buffer[1024];
-	rrBuff rr;
-	Handle teH = NULL;
-	unsigned type = cookie->type;
-	unsigned ipid = cookie->ipid;
-	unsigned err;
-
-	if (type == kGopherTypeText) {
-		teH = (Handle)GetCtlHandleFromID(window, kGopherText);
-
-		for(;;) {
-			rlrBuff rlr;
-			unsigned i, j, c;
-
-			err = TCPIPReadLineTCP(ipid, (char *)(0x80000000|(unsigned long)"\p\n"), 0, (Ref)buffer, sizeof(buffer), &rlr);
-
-			if (!rlr.rlrBuffCount) break;
-
-			// remove \r, convert \n to \r
-			for (i = 0, j = 0; i < (unsigned)rlr.rlrBuffCount; ++i) {
-				c = buffer[i];
-				if (c == '\r') continue;
-				if (c == '\n') c = '\r';
-				buffer[j++] = c;
-			}
-			// end of file....
-			if (j == 2 && buffer[0] == '.' && buffer[1] == '\r') {
-				// should close it...
-				TCPIPCloseTCP(ipid);
-				cookie->state = kStateClosing;
-				j = 0;
-			}
-
-			if (j) {
-				TERecord **temp = (TERecord **)teH;
-
-  				(**temp).textFlags &= (~fReadOnly);
-
-				TESetSelection((Pointer)-1, (Pointer)-1, teH);
-				TEInsert(teDataIsTextBlock | teTextIsPtr, (Ref)buffer, j, 0, NULL, teH);
-  				(**temp).textFlags |= fReadOnly;
-
-			}
-			if (!rlr.rlrMoreFlag) break;
-
-
-		}
-		return;
-	}
-
-
-#if 0
-	for (;;) {
-
-		err = TCPIPReadTCP(ipid, 0, sizeof(buffer), &rr);
-
-		if (rr.rrBuffCount == 0) break;
-
-		if (type == kGopherTypeText) {
-			unsigned i, j, c;
-			unsigned bits = 0;
-
-			TESetSelection(-1, -1, teH);
-			// need to process the data to remove \r and convert \n to \r
-			// and strip trailing .\r\n
-
-			for (i = 0, j = 0; i < (unsigned)rr.rrBuffCount; ++i) {
-				c = buffer[i];
-				if (c == '\r') continue;
-				bits <<= 2;
-
-				if (c == '\n') { c = '\r'; bits |= 0b01; }
-				if (c == '.') { bits |= 0b10; }
-				if ((bits & 0b111111) == 0b011001) {
-					j -= 2;
-					continue;
-				}
-				buffer[j++] = c;
-			}
-			
-
-			TEInsert(teDataIsTextBlock | teTextIsPtr, j, 0, NULL, teH);
-		}
-
-		if (!rr.rrMoreFlag) break;
-	}
-#endif
-}
-
-void TCPProcessWindow(GrafPortPtr window, window_cookie *cookie) {
-
-	unsigned err;
-	srBuff sr;
-	unsigned ipid = cookie->ipid;
-
-	switch (cookie->state) {
-		case kStateError:
-		case kStateComplete:
-			break;
-
-		case kStateDNR:
-			if (cookie->dnr.DNRstatus == DNR_OK) {
-				cookie->state = kStateConnecting;
-
-				ipid = TCPIPLogin(MyID | 0x0f00, cookie->dnr.DNRIPaddress, cookie->port, 0, 64);
-				if (_toolErr) {
-					cookie->state = kStateError;
-					return;
-				}
-				err = TCPIPOpenTCP(ipid);
-				if (_toolErr || err) {
-					TCPIPLogout(ipid);
-					cookie->state = kStateError;
-					return;
-				}
-				cookie->ipid = ipid;
-				break;
-			}
-			if (cookie->dnr.DNRstatus == DNR_Pending) return;
-			// timeout / no dns
-			cookie->state = kStateError;
-			break;
-
-		case kStateConnecting:
-			err = TCPIPStatusTCP(ipid, &sr);
-			if (sr.srState == TCPSESTABLISHED) {
-				unsigned char *selector = cookie->selector;
-				cookie->state = kStateReading;
-				if (selector)
-					err = TCPIPWriteTCP(ipid, selector+1, selector[0], 0, 0);
-				err = TCPIPWriteTCP(ipid, "\r\n", 2, 1, 0);
-				cookie->state = kStateReading;
-			}
-			else if (sr.srState == TCPSCLOSED) {
-				// reset??
-				TCPIPLogout(ipid);
-				cookie->ipid = 0;
-				cookie->state = kStateError;
-			}
-			else if (sr.srState > TCPSESTABLISHED) {
-				// closing
-				cookie->state = kStateError;
-			}
-			break;
-
-		case kStateReading:
-			err = TCPIPStatusTCP(ipid, &sr);
-			if (sr.srRcvQueued) {
-
-				TCPRead(window, cookie, sr.srRcvQueued);
-			}
-
-			if (sr.srState == TCPSCLOSED) {
-				// reset??
-				TCPIPLogout(ipid);
-				cookie->ipid = 0;
-				cookie->state = kStateError;
-			}
-			else if (sr.srState > TCPSESTABLISHED) {
-				// closing...
-				TCPIPCloseTCP(ipid);
-				cookie->state = kStateClosing;
-			}
-			break;
-
-		case kStateClosing:
-			err = TCPIPStatusTCP(ipid, &sr);
-			if (sr.srState == TCPSTIMEWAIT) {
-				TCPIPAbortTCP(ipid);
-				TCPIPLogout(ipid);
-				cookie->ipid = 0;
-				cookie->state = kStateComplete;
-			}
-			if (sr.srState == TCPSCLOSED) {
-				TCPIPLogout(ipid);
-				cookie->ipid = 0;
-				cookie->state = kStateComplete;				
-			}
-			break;
-	}
-}
-
+#pragma databank 0
 
 void NetworkUpdate(unsigned up) {
 	if (up) {
@@ -348,6 +97,7 @@ static void Setup(void) {
 	DrawMenuBar();
 
 	InitCursor();
+	StartupQueue();
 
 	/* icons */
 	Icons[0] = (Pointer)GetSysIcon(getFileIcon, 0x04, 0x0000); // text
@@ -457,10 +207,9 @@ void DoOpen(void) {
 	static char text[256];
 	// static URLComponents uc;
 
-	window_cookie *cookie = NULL;
-
 	CtlRecHndl ctrlH;
 	LERecHndl leH;
+	unsigned ok;
 
 
 	if (window_count >= 10) return;
@@ -501,56 +250,80 @@ void DoOpen(void) {
 					GetLETextByID(win, kGopherURL, (StringPtr)text);
 					if (!text[0]) break;
 
-					cookie = parse_url(text + 1, text[0]);
-					if (cookie) {
+					ok = QueueURL(text + 1, text[0]);
+					if (ok) {
 						quit = 1;
-					} else {
-						SysBeep2(sbBadInputValue);
+						break;
 					}
+					SysBeep2(sbBadInputValue);
 					break;
 
 			}
 			if (quit) break;
 		}
 
+		if (event.what == nullEvt) {
+			ProcessQueue();
+		}
 	}
 	CloseWindow(win); // or just hide so url is retained?
 	InitCursor(); /* reset possible I-beam cursor */
-
-	if (cookie) {
-		unsigned i;
+}
 
 
-		unsigned long id = 0;
-		if (cookie->type == kGopherTypeText) id = kTextWindow;
-		if (cookie->type == kGopherTypeIndex) id = kIndexWindow;
-		if (id) {
-			GrafPortPtr win;
-			win = NewWindow2((Pointer)cookie->title, (Long)cookie, WindowDrawControls, NULL, refIsResource, id, rWindParam1);
-			SetInfoRefCon((Long)cookie, win);
-			SetInfoDraw(DrawInfo, win);
-			TCPNewWindow(win, cookie);
-			ShowWindow(win);
-			SelectWindow(win);
+void NewTextWindow(const char *host, const char *selector, char *text, unsigned long length) {
 
-			for (i = 0; i < 10; ++i) {
-				if (!windows[i]) {
-					windows[i] = win;
-					cookies[i] = cookie;
-					++window_count;
-					window_active |= (1 << i);
-					break;
-				}
-			}
+	Handle title;
+	unsigned l = 0;
+	GrafPortPtr win;
+	Handle teH;
 
-		} else {
-			free(cookie);
+	/* generate a window title */
+	l = host[0] + 2;
+	if (selector) {
+		l += selector[0] + 3;
+	}
+
+	title = NewHandle(l + 1, MyID, attrNoSpec | attrLocked, 0);
+	if (_toolErr) return;
+
+	if (title) {
+		char *cp = *(char **)title;
+		*cp++ = l;
+		*cp++ = ' ';
+		memcpy(cp, host + 1, host[0]);
+		cp += host[0];
+		*cp++ = ' ';
+		if (selector) {
+			*cp++ = '-';
+			*cp++ = ' ';
+			memcpy(cp, selector + 1, selector[0]);
+			cp += selector[0];
+			*cp++ = ' ';
 		}
 	}
 
-	// event.wmTaskMask = 0x001FFFFF;
-}
+	win = NewWindow2(NULL, 0, WindowDrawControls, NULL, refIsResource, kTextWindow, rWindParam1);
+	if (_toolErr) {
+		DisposeHandle(title);
+		return;
+	}
 
+	SetWTitle((Pointer)(0x80000000 | (unsigned long)title), win);
+
+	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+
+	// TERecord **temp = (TERecord **)teH;
+	// (**temp).textFlags &= (~fReadOnly);
+	// TESetSelection((Pointer)-1, (Pointer)-1, teH);
+	// TEInsert(teDataIsTextBlock | teTextIsPtr, (Ref)buffer, j, 0, NULL, teH);
+	// (**temp).textFlags |= fReadOnly;
+
+
+	// TODO - remove trailing .\r
+
+	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
+}
 
 
 void DoMenu(void) {
@@ -575,6 +348,14 @@ void DoMenu(void) {
 		case kQuitItem:
 			Quit = 1;
 			break;
+
+		case kConnectItem:
+			TCPIPConnect(NULL);
+			break;
+
+		case kDisconnectItem:
+			TCPIPDisconnect(1, NULL);
+			break;
 	}
 }
 
@@ -590,33 +371,15 @@ void EventLoop(void) {
 			DoMenu();
 			break;
 
+		case wInGoAway:
+			// TODO
+			break;
+
 		case wInControl:
 			break;
 
 		case nullEvt:
-			if (window_active) {
-				unsigned bits;
-				unsigned i;
-				window_cookie *c;
-
-				TCPIPPoll();
-				bits = window_active;
-				for(i = 0; bits; ++i, bits >>= 1) {
-					unsigned st;
-					if (!bits & 1) continue;
-
-					c = cookies[i];
-					st = c->state;
-					TCPProcessWindow(windows[i], c);
-					if (st != c->state) {
-						st = c->state;
-						DrawInfoBar(windows[i]);
-						if (st == kStateError || st == kStateComplete) {
-							window_active &= ~(1 << i);
-						}
-					}
-				}
-			}
+			ProcessQueue();
 			break;
 
 		}

@@ -61,7 +61,7 @@ resource rMenu (kAppleMID, nocrossbank){
 	kAppleMID,
 	0xA008,
 	kAppleMID,
-	{ kAbout };
+	{ kAbout, kPreferences };
 };
 
 resource rMenu (kFileMID, nocrossbank){
@@ -155,7 +155,7 @@ resource rMenuItem (kAbout, nocrossbank){
 	"",
 	"",
 	0,
-	0x8040,
+	0x8000,
 	kAbout
 };
 
@@ -164,9 +164,11 @@ resource rMenuItem (kPreferences, nocrossbank){
 	",",
 	",",
 	0,
-	0x8000,
+	0x8040,
 	kPreferences
 };
+
+
 
 resource rMenuItem (kOpenItem, nocrossbank){
 	kOpenItem,
@@ -259,9 +261,9 @@ resource rMenuItem (kNetworkStatusItem, nocrossbank)
 
 
 resource rPString (kAppleMID, nocrossbank){"@"};
-resource rPString (kFileMID, nocrossbank){" File "};
-resource rPString (kEditMID, nocrossbank){" Edit "};
-resource rPString (kNetworkMID, nocrossbank){" Network "};
+resource rPString (kFileMID, nocrossbank){"  File  "};
+resource rPString (kEditMID, nocrossbank){"  Edit  "};
+resource rPString (kNetworkMID, nocrossbank){"  Network  "};
 
 
 resource rPString (kAbout, nocrossbank){"About..."};
@@ -316,7 +318,7 @@ resource rWindParam1 (kIndexWindow) {
 
 
 resource rWindParam1 (kTextWindow) {
-	fTitle + fMove + fClose + fInfo,
+	fTitle + fMove + fClose + fVis,
 	kTextWindow, /* title id */
 	0x0,
 	{0, 0, 0, 0},
@@ -327,7 +329,7 @@ resource rWindParam1 (kTextWindow) {
 	{0, 0},
 	{0, 0},
 	0,
-	13, /* info height */
+	0, /* info height */
 	{40, 40, 190, 600}, /* wPosition */
 	infront,
 	kGopherText, /* rControlList */
@@ -338,11 +340,11 @@ resource rWindParam1 (kTextWindow) {
 
 
 resource rWindParam1 (kURLWindow) {
-	fAlert + fVis,
+	/*fAlert + */ fVis + fFlex,
 	0, /* title id */
 	0x0,
 	{0, 0, 0, 0},
-	0, /* color table */
+	kURLWindow, /* color table */
 	{0, 0},
 	{0, 0},
 	{0, 0},
@@ -353,7 +355,7 @@ resource rWindParam1 (kURLWindow) {
 	{50, 40, 70, 600}, /* wPosition */
 	infront,
 	kGopherURL, /* rControlList */
-	(refIsPtr << 10) + /* color table */
+	(refIsResource << 10) + /* color table */
 	(refIsPtr << 8) + /* title */ 
 	singleResource /* control descriptor */
 };
@@ -376,6 +378,16 @@ resource rWindColor (kTextWindow) {
 	0x20F, /* title bar color */
 	0xF0FF, /* grow color */
 	0xF0 /* info color */
+};
+
+
+
+resource rWindColor (kURLWindow) {
+	0x0, /* frame color */
+	0x0f0f, /* title color */
+	0x0000, /* title bar color */
+	0xf0ff, /* grow color */
+	0xf0f0 /* info color */
 };
 
 

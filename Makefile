@@ -12,7 +12,7 @@ LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/index.o o/gopher-url.o
+OBJS = o/gopher.o o/index.o o/q.o
 
 ROBJ = o/gopher.r
 
@@ -30,6 +30,8 @@ o/url.o: url.c url.h
 o/gopher-url.o: gopher-url.c gopher.h
 
 o/gopher.r: gopher.rez defines.h
+
+o/q.o: q.c q.h
 
 o/%.r : %.rez | o
 	$(CC) -c -o $@ $<
