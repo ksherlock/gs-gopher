@@ -309,6 +309,7 @@ void NewTextWindow(const char *host, const char *selector, char *text, unsigned 
 		return;
 	}
 
+	// SetWTitle was updated to take a Handle.  NewWindow2 apparently was not.
 	SetWTitle((Pointer)(0x80000000 | (unsigned long)title), win);
 
 	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
