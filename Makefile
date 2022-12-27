@@ -12,7 +12,7 @@ LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/index.o o/q.o
+OBJS = o/gopher.o o/q.o
 
 ROBJ = o/gopher.r
 

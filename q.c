@@ -2,7 +2,6 @@
 #pragma optimize 79
 #pragma noroot
 
-#include <q.h>
 
 #include <memory.h>
 #include <tcpip.h>
@@ -11,8 +10,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-
-void NewTextWindow(const char *host, const char *selector, char *text, unsigned long length);
+#include "q.h"
+#include "gopher.h"
 
 enum {
 	kStateComplete = 0,
@@ -58,6 +57,8 @@ unsigned Active = 0;
 unsigned ID = 0;
 
 void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error);
+
+void DownloadComplete(DownloadItem *item);
 
 void StartupQueue(void) {
 	ID = MMStartUp() | 0x0f00;
@@ -297,7 +298,7 @@ static unsigned OneItem(DownloadItem *item) {
 				// open window...
 				TCPIPCloseTCP(ipid);
 				item->state = kStateClosing;
-				NewTextWindow(item->host, item->selector, *(char **)item->handle, item->size);
+				DownloadComplete(item);
 				DisposeHandle(item->handle);
 				item->handle = 0;
 			}
@@ -491,3 +492,216 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	Active |= mask;
 	return 1;
 }
+
+
+
+
+
+unsigned OneLine(char *ptr, ListEntry *e){
+
+	unsigned i = 0;
+	unsigned type;
+	unsigned c;
+	unsigned port;
+	unsigned j;
+
+	c = ptr[0];
+	if (c == '.') return -1;
+	if (c < ' ') return -1;
+
+
+	e->type = c;
+
+
+	j = i;
+	e->name = ptr + i;
+	++i;
+
+	for(;;++i) {
+		c = ptr[i];
+		if (c < ' ') break;
+	}
+	ptr[j] = i - j - 1;
+	if (c == '\r') return i;
+
+	j = i;
+	e->selector = ptr + i;
+	++i;
+
+	for(;;++i) {
+		c = ptr[i];
+		if (c < ' ') break;
+	}
+	ptr[j] = i - j - 1;
+	if (c == '\r') return i;
+
+
+	j = i;
+	e->host = ptr + i;
+	++i;
+
+	for(;;++i) {
+		c = ptr[i];
+		if (c < ' ') break;
+	}
+	ptr[j] = i - j - 1;
+	if (c == '\r') return i;
+
+
+	port = 0;
+	for(;;++i) {
+		c = ptr[i];
+		if (!isdigit(c)) break;
+		port *= 10;
+		port += c - '0';
+	}
+	if (!port) port = 70;
+	e->port = port;
+
+	while (ptr[i] != '\r') ++i;
+	return i + 1;
+}
+
+static unsigned TitleLength(DownloadItem *item) {
+	unsigned len = item->host[0] + 3;
+	if (item->selector) len += item->selector[0] + 3;
+	return len;
+}
+
+static char *TitleCopy(char *cp, unsigned len, DownloadItem *item) {
+	char *nm;
+
+	*cp++ = len-1;
+	*cp++ = ' ';
+
+	nm = item->host;
+	len = nm[0];
+	memcpy(cp, nm + 1, len);
+	cp += len;
+	*cp++ = ' ';
+
+	nm = item->selector;
+	if (nm) {
+
+		*cp += '-';
+		*cp += ' ';
+		len = nm[0];
+		memcpy(cp, nm + 1, len);
+		cp += len;
+		*cp++ = ' ';
+	}
+
+	return cp;
+}
+
+
+void IndexComplete(DownloadItem *item) {
+
+
+	Handle h = item->handle;
+	long size = item->size;
+	char *ptr;
+	char *cp;
+	index_cookie *cookie;
+	unsigned tlen;
+	unsigned long extra;
+
+	unsigned lines;
+ 	ListEntry *e;
+
+
+	// verify final character is .\r so checks work///
+
+	if (size < 2) {
+		// error of some sort...
+	}
+
+	// should end w/ .\r.  append trailing \r as a sentinal.
+
+
+	HUnlock(h);
+	SetHandleSize(size + 2, h);
+	HLock(h);
+ 	ptr = *(char **)h;
+ 	ptr[size] = '\r';
+ 	ptr[size+1] = '\r';
+
+
+ 	lines = item->lines + 1;
+	tlen = TitleLength(item);
+	extra = tlen + sizeof(ListEntry) * lines;
+
+	cookie = malloc(sizeof(index_cookie) + extra);
+	memset(cookie, 0, sizeof(index_cookie) + extra);
+
+	cookie->type = item->type;
+
+	cp = cookie->data;
+	cookie->title = cp;
+
+	cp = TitleCopy(cp, tlen, item);
+
+	e = (ListEntry *)cp;
+	cookie->list = e;
+
+ 	lines = 0;
+	for(;;) {
+		unsigned i = OneLine(ptr, e);
+		if (i == -1) break;
+		ptr += i;
+		++lines;
+		++e;
+	}
+	cookie->listSize = lines;
+	cookie->handle = h;
+	item->handle = 0;
+
+	NewIndexWindow(cookie);
+}
+
+
+void TextComplete(DownloadItem *item) {
+
+	Handle h = item->handle;
+	long size = item->size;
+	char *ptr = *(char **)h;
+	char *cp;
+	text_cookie *cookie;
+	unsigned i;
+	unsigned tlen;
+
+	// check for a trailing .\r
+	// may not be present since many gopher servers are not compliant.
+
+	if (size >= 2) {
+		if (ptr[size - 2] == '.' && ptr[size - 1] == '\r')
+			size -= 2;
+	}
+
+
+	tlen = TitleLength(item);
+
+	cookie = malloc(sizeof(text_cookie) + tlen);
+
+	cp = cookie->data;
+	cookie->type = item->type;
+	cookie->title = cp;
+
+	TitleCopy(cp, tlen, item);
+
+	NewTextWindow(cookie, ptr, size);
+}
+
+void DownloadComplete(DownloadItem *item) {
+
+	switch(item->type) {
+	case kGopherTypeIndex:
+		IndexComplete(item);
+		break;
+	case kGopherTypeText:
+		TextComplete(item);
+		break;
+	}
+}
+
+

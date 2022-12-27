@@ -1,29 +1,6 @@
 
-#include <tcpip.h>
-
-enum {
-	kStateComplete = 0,
-	kStateDNR,
-	kStateConnecting,
-	kStateReading,
-	kStateClosing,
-	kStateError
-};
-
-typedef struct window_cookie {
-	struct window_cookie *next;
-	dnrBuffer dnr;
-	unsigned port;
-	unsigned type;
-	unsigned ipid;
-	unsigned state;
-	char *title; // window title
-	char *host;
-	char *selector;
-
-	char data[1]; // host/selector/title pstrings.
-
-} window_cookie;
+#include <stdint.h>
+#include <types.h>
 
 enum {
 	kGopherTypeText = '0', 
@@ -33,4 +10,52 @@ enum {
 	kGopherTypeSearch = '7',
 };
 
-window_cookie *parse_url(const char *cp, unsigned length);
+
+// records for the List Manager index.
+typedef struct ListEntry {
+	// ptrs are p-strings.
+	char *name;
+	uint8_t flags;
+	uint8_t type;
+	uint16_t port;
+	char *selector;
+	char *host;
+} ListEntry;
+
+
+
+
+// window refcon
+typedef struct cookie {
+	unsigned type;
+	char *title; // window title
+} cookie;
+
+typedef struct text_cookie {
+	unsigned type;
+	char *title;
+	char data[1];
+} text_cookie;
+
+typedef struct index_cookie {
+	unsigned type;
+	char *title;
+	Handle handle;
+	unsigned listSize;
+	ListEntry *list;
+	char data[1];
+} index_cookie;
+
+
+#if 0
+struct menu_entry {
+	unsigned type;
+	unsigned port;
+	char *name;
+	char *host;
+	char *selector;
+};
+#endif
+
+void NewTextWindow(text_cookie *, void *, unsigned long);
+void NewIndexWindow(index_cookie *);

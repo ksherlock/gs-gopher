@@ -6,6 +6,7 @@
 #include <event.h>
 #include <gsos.h>
 #include <lineedit.h>
+#include <list.h>
 #include <locator.h>
 #include <memory.h>
 #include <menu.h>
@@ -22,8 +23,7 @@
 #include <string.h>
 
 #include "defines.h"
-// #include "url.h"
-//#include "gopher.h"
+#include "gopher.h"
 #include "q.h"
 
 
@@ -271,59 +271,97 @@ void DoOpen(void) {
 }
 
 
-void NewTextWindow(const char *host, const char *selector, char *text, unsigned long length) {
+void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
-	Handle title;
-	unsigned l = 0;
 	GrafPortPtr win;
 	Handle teH;
 
-	/* generate a window title */
-	l = host[0] + 2;
-	if (selector) {
-		l += selector[0] + 3;
-	}
-
-	title = NewHandle(l + 1, MyID, attrNoSpec | attrLocked, 0);
-	if (_toolErr) return;
-
-	if (title) {
-		char *cp = *(char **)title;
-		*cp++ = l;
-		*cp++ = ' ';
-		memcpy(cp, host + 1, host[0]);
-		cp += host[0];
-		*cp++ = ' ';
-		if (selector) {
-			*cp++ = '-';
-			*cp++ = ' ';
-			memcpy(cp, selector + 1, selector[0]);
-			cp += selector[0];
-			*cp++ = ' ';
-		}
-	}
-
-	win = NewWindow2(NULL, 0, WindowDrawControls, NULL, refIsResource, kTextWindow, rWindParam1);
+	win = NewWindow2(cookie->title, (Long)cookie, WindowDrawControls, NULL, refIsResource, kTextWindow, rWindParam1);
 	if (_toolErr) {
-		DisposeHandle(title);
 		return;
 	}
 
-	// SetWTitle was updated to take a Handle.  NewWindow2 apparently was not.
-	SetWTitle((Pointer)(0x80000000 | (unsigned long)title), win);
-
 	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
 
-	// TERecord **temp = (TERecord **)teH;
-	// (**temp).textFlags &= (~fReadOnly);
-	// TESetSelection((Pointer)-1, (Pointer)-1, teH);
-	// TEInsert(teDataIsTextBlock | teTextIsPtr, (Ref)buffer, j, 0, NULL, teH);
-	// (**temp).textFlags |= fReadOnly;
-
-
-	// TODO - remove trailing .\r
-
 	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
+}
+#pragma toolparms 1
+#pragma databank 1
+void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
+
+	static unsigned char DimMask[] = {
+		0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa,
+	};
+
+	static unsigned char NorMask[] = {
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	};
+
+	void *iconPtr = nil;
+	unsigned width = rectPtr->h2 - rectPtr->h1 - 20;
+
+	// draw type icon and name.
+	unsigned memFlags = entry->flags;
+
+	// fill rect (white or green)
+	if (memFlags & memSelected)
+		SetBackColor(0xaaaa); // green
+	else
+		SetBackColor(0xffff); // white
+	EraseRect(rectPtr);
+
+	if (iconPtr)
+		DrawIcon(iconPtr, 0, rectPtr->h1, rectPtr->v2);
+
+	SetForeColor(0x0000);
+	SetTextMode(0);
+	MoveTo(rectPtr->h1 + 20, rectPtr->v2);
+
+	if (memFlags & memDisabled) {
+		SetPenMask(DimMask);
+	}
+
+	DrawStringWidth(dswTruncRight + dswPString + dswStrIsPtr, (Ref)entry->name, width);
+
+	if (memFlags & memDisabled) {
+		SetPenMask(NorMask);
+	}
+
+
+
+}
+
+#pragma toolparms 0
+#pragma databank 0
+
+void NewIndexWindow(index_cookie *cookie) {
+
+	GrafPortPtr win;
+	CtlRecHndl ctrl;
+	ListCtlRec *listPtr;
+
+	win = NewWindow2(cookie->title, (Long)cookie, WindowDrawControls, NULL, refIsResource, kIndexWindow, rWindParam1);
+	if (_toolErr) {
+		return;
+	}
+
+	ctrl = GetCtlHandleFromID(win, kGopherIndex);
+
+	listPtr = *(ListCtlRec **)ctrl;
+	listPtr->ctlMemSize = sizeof(ListEntry);
+
+#if 0
+	// number of entries / view size.
+	// view size 0 = list manager takes care of it.
+	listPtr->ctlData = ((unsigned long)cookie->listSize << 16);
+	listPtr->ctlMemDraw = ListDraw;
+	listPtr->ctlList = (MemRecPtr)cookie->list;
+#endif
+
+	NewList2((Pointer)ListDraw, 1, (Ref)cookie->list, refIsPointer, cookie->listSize, (Handle)ctrl);
+
+	ShowWindow(win);
+	BringToFront(win);
 }
 
 

@@ -296,7 +296,8 @@ resource rPString (kNetworkStatusItem, nocrossbank){"Status..."};
 #define WindowHeight 150 
 
 resource rWindParam1 (kIndexWindow) {
-	fTitle + fMove + fVis,
+	// visibility toggled after
+	fTitle + fMove + fClose,
 	kIndexWindow, /* title id */
 	0x0,
 	{0, 0, 0, 0},
@@ -421,18 +422,18 @@ resource rControlTemplate (kGopherURL) {
 
 resource rControlTemplate (kGopherIndex) {
 	kGopherIndex,
-	{19, -2, 190, 601 },
+	{-1, -2, 190, 601 },
 	ListControl {
 		 {	/* optional Fields */
 			0x0, /* flags */
 			FctlProcNotPtr+FctlIsMultiPart, /* more flags */
 			0x0, /* ref con */
 			0, /* list size */
-			5, /* list view */
+			0, /* list view */
 			fListSelect, /* list type */
-			0, /* list start */
+			1, /* list start */
 			10, /* list mem height */
-			16, /* list mem size */
+			0, /* list mem size */
 			0x0, /* list ref */
 			0x0, /* list color ref */
 		}
