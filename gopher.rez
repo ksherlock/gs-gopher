@@ -420,13 +420,15 @@ resource rControlTemplate (kGopherURL) {
 #define fListSelect 0x0002
 #define fListScrollBar 0x0004
 
+#define testMemNever 0x0040
+
 resource rControlTemplate (kGopherIndex) {
 	kGopherIndex,
-	{-1, -2, 190, 601 },
+	{-1, -2, WindowHeight - 1, WindowWidth-22 },
 	ListControl {
 		 {	/* optional Fields */
-			0x0, /* flags */
-			FctlProcNotPtr+FctlIsMultiPart, /* more flags */
+			testMemNever, /* flags */
+			FctlProcNotPtr+FctlIsMultiPart /*+FctlCanBeTarget+FctlWantsEvents*/, /* more flags */
 			0x0, /* ref con */
 			0, /* list size */
 			0, /* list view */

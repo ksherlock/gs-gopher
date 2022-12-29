@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "q.h"
 #include "gopher.h"
+#include "q.h"
 
 enum {
 	kStateComplete = 0,
@@ -343,10 +343,35 @@ void ProcessQueue(void) {
 }
 
 
+
 typedef struct range {
 	unsigned location;
 	unsigned length;
 } range;
+
+static void BeginQueue(DownloadItem *item) {
+	if (TCPIPValidateIPString(item->host)) {
+		cvtRec cvt;
+		unsigned err;
+
+		TCPIPConvertIPToHex(&cvt, item->host);
+		item->dnr.DNRstatus = DNR_OK;
+		item->dnr.DNRIPaddress = cvt.cvtIPAddress;
+		item->state = kStateDNR; // handle later
+#if 0
+		item->state = kStateConnecting;
+		item->ipid = TCPIPLogin(ID, cvt.cvtIPAddress, item->port, 0, 64);
+		if (_toolErr) {
+			CleanupItem(kStateError, _toolErr);
+			return 0;
+		}
+		err = TCPIPOpenTCP(item->ipid);
+#endif
+	} else {
+		TCPIPDNRNameToIP(item->host, &item->dnr);
+		item->state = kStateDNR;
+	}	
+}
 
 unsigned QueueURL(const char *cp, unsigned length) {
 
@@ -463,38 +488,57 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		item->selector = p;
 		*p++ = selector.length;
 		memcpy(p, cp + selector.location, selector.length);
-	} else {
-		item->selector = 0;
 	}
 
-	// initiate DNS lookup....
-	if (TCPIPValidateIPString(item->host)) {
-		cvtRec cvt;
-		unsigned err;
-
-		TCPIPConvertIPToHex(&cvt, item->host);
-		item->dnr.DNRstatus = DNR_OK;
-		item->dnr.DNRIPaddress = cvt.cvtIPAddress;
-		item->state = kStateDNR; // handle later
-#if 0
-		item->state = kStateConnecting;
-		item->ipid = TCPIPLogin(ID, cvt.cvtIPAddress, item->port, 0, 64);
-		if (_toolErr) {
-			CleanupItem(kStateError, _toolErr);
-			return 0;
-		}
-		err = TCPIPOpenTCP(item->ipid);
-#endif
-	} else {
-		TCPIPDNRNameToIP(item->host, &item->dnr);
-		item->state = kStateDNR;
-	}
+	BeginQueue(item);
 	Active |= mask;
 	return 1;
 }
 
 
+unsigned QueueEntry(struct ListEntry *e) {
 
+	unsigned extra;
+	unsigned i;
+	char *p;
+
+
+	unsigned mask;
+	DownloadItem *item = DownloadQueue;
+
+	// find an empty entry.
+	if (Active == -1) return 0;
+
+	for (mask = 1 ; mask; mask <<= 1, ++item) {
+		if (!(Active & mask)) break;
+	}
+	memset(item, 0, sizeof(*item));
+
+	item->type = e->type;
+	item->port = e->port;
+
+	extra = e->host[0];
+	if (e->selector) extra += e->selector[0];
+	extra += 2;
+
+	p = malloc(extra);
+	if (!p) return 0;
+
+	item->host = p;
+
+	i = e->host[0] + 1;
+	memcpy(p, e->host, i);
+	if (e->selector) {
+		p += i;
+		item->selector = p;
+		i = e->selector[0] + 1;
+		memcpy(p, e->selector, i);
+	}
+
+	BeginQueue(item);
+	Active |= mask;
+	return 1;
+}
 
 
 unsigned OneLine(char *ptr, ListEntry *e){
@@ -511,6 +555,9 @@ unsigned OneLine(char *ptr, ListEntry *e){
 
 
 	e->type = c;
+	if (c == kGopherTypeInfo || c == kGopherTypeError) {
+		e->flags |= 0x40 | 0x20; // disabled, inactive.
+	}
 
 
 	j = i;
@@ -583,8 +630,8 @@ static char *TitleCopy(char *cp, unsigned len, DownloadItem *item) {
 	nm = item->selector;
 	if (nm) {
 
-		*cp += '-';
-		*cp += ' ';
+		*cp++ = '-';
+		*cp++ = ' ';
 		len = nm[0];
 		memcpy(cp, nm + 1, len);
 		cp += len;

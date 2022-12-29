@@ -298,32 +298,43 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	};
 
 	void *iconPtr = nil;
-	unsigned width = rectPtr->h2 - rectPtr->h1 - 20;
+	unsigned width = rectPtr->h2 - rectPtr->h1 - 32;
 
 	// draw type icon and name.
 	unsigned memFlags = entry->flags;
 
+
+
 	// fill rect (white or green)
-	if (memFlags & memSelected)
+	if (memFlags & memSelected) {
 		SetBackColor(0xaaaa); // green
-	else
+		SetSolidBackPat(0xaaaa);
+	}
+	else {
 		SetBackColor(0xffff); // white
+		SetSolidBackPat(0xffff);
+	}
 	EraseRect(rectPtr);
 
+	iconPtr = IconForType(entry->type);
 	if (iconPtr)
-		DrawIcon(iconPtr, 0, rectPtr->h1, rectPtr->v2);
+		DrawIcon(iconPtr, 0, rectPtr->h1 + 2, rectPtr->v1 + 2);
 
 	SetForeColor(0x0000);
 	SetTextMode(0);
-	MoveTo(rectPtr->h1 + 20, rectPtr->v2);
+	MoveTo(rectPtr->h1 + 32, rectPtr->v2 - 1);
 
+#if 0
 	if (memFlags & memDisabled) {
 		SetPenMask(DimMask);
 	}
+#endif
 
 	DrawStringWidth(dswTruncRight + dswPString + dswStrIsPtr, (Ref)entry->name, width);
 
 	if (memFlags & memDisabled) {
+		SetPenMask(DimMask);
+		EraseRect(rectPtr);
 		SetPenMask(NorMask);
 	}
 
@@ -364,6 +375,25 @@ void NewIndexWindow(index_cookie *cookie) {
 	BringToFront(win);
 }
 
+void DoCloseWindow(GrafPortPtr win) {
+	struct cookie *c;
+
+	if (!win) win = FrontWindow();
+	if (!win) return;
+
+	c = (struct cookie *)GetWRefCon(win);
+	if (c) {
+		if (c->type == kGopherIndex) {
+			DisposeHandle(((index_cookie *)c)->handle);
+		}
+		free(c);
+	}
+
+	CloseWindow(win);
+
+	// todo -- update menus, etc.
+
+}
 
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
@@ -376,8 +406,11 @@ void DoMenu(void) {
 		case kCopyItem:
 		case kPasteItem:
 		case kClearItem:
-		case kCloseItem:
 			break;
+		case kCloseItem:
+			DoCloseWindow(0);
+			break;
+
 		case kAbout:
 			AlertWindow(refIsResource << 1, NULL, 1);
 			break;
@@ -398,6 +431,20 @@ void DoMenu(void) {
 	}
 }
 
+void OpenIndex(ListCtlRec *rec) {
+	ListEntry *e = (ListEntry *)rec->ctlList;
+	unsigned count = rec->ctlData >> 16;
+
+	unsigned i;
+
+	for (i = 0; i < count; ++i, ++e) {
+		if (e->flags & memSelected) {
+			QueueEntry(e);
+			break;
+		}
+	}
+}
+
 void EventLoop(void) {
 	word taskCode;
 
@@ -410,11 +457,71 @@ void EventLoop(void) {
 			DoMenu();
 			break;
 
-		case wInGoAway:
-			// TODO
+		case wInGoAway: {
+			// wmTaskData = window
+			GrafPortPtr win = (GrafPortPtr)event.wmTaskData;
+			DoCloseWindow(win);
 			break;
+		}
 
-		case wInControl:
+		case wInControl: {
+			// wmTaskData = window
+			// wmTaskData2 = control (handle)
+			// wmTaskData3 = def proc result code
+			// wmTaskData4 = control id
+			if (event.wmClickCount == 2 && event.wmTaskData4 == kGopherIndex) {
+				ListCtlRec **handle = (ListCtlRec **)event.wmTaskData2;
+				OpenIndex(*handle);
+			}
+
+			break;
+		}
+
+		case autoKeyEvt:
+		case keyDownEvt: {
+			// keyboard navigation for index?
+
+			GrafPortPtr win = (GrafPortPtr)FrontWindow();
+			if (GetSysWFlag(win)) break; // NDA, etc.
+
+
+			CtlRecPtr ctrlPtr;
+
+			CtlRecHndl ctrlH = GetCtlHandleFromID(win, kGopherIndex); // FindTargetCtl();
+			if (_toolErr || !ctrlH) break;
+
+			ctrlPtr = *ctrlH;
+			if (ctrlPtr->ctlID == kGopherIndex) {
+				// pass up/down events to 
+				switch(event.message) {
+				case 0x0a:
+				case 0x0b:
+					// up/down
+					SetPort(win);
+					ListKey(0, &event, ctrlH);
+					break;
+				case ' ':
+				case 0x0d:
+					OpenIndex((ListCtlRec *)ctrlPtr);
+					break;
+				}
+
+			}
+
+#if 0
+			GrafPortPtr win = (GrafPortPtr)FrontWindow();
+			if (GetSysWFlag(win)) break; // NDA, etc.
+			asm {
+				ldx #event
+				ldy #^event
+				brk 0xea
+			}
+#endif
+
+			break;
+		}
+
+		case mouseDownEvt:
 			break;
 
 		case nullEvt:
