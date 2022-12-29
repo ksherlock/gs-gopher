@@ -84,9 +84,21 @@ pascal word HandleRequest(word request, longword dataIn, longword dataOut) {
 #pragma databank 0
 #pragma toolparms 0
 
+static Pointer GetIcon(unsigned ix) {
+	Handle h;
+
+	h = LoadResource(rIcon, ix);
+	if (h) {
+		HLock(h);
+		DetachResource(rIcon, ix);
+		return *(void **)h;
+	}
+	return 0;
+}
 
 static void Setup(void) {
 
+	Handle h;
 	/* menu bars */
 
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
@@ -99,11 +111,19 @@ static void Setup(void) {
 	InitCursor();
 	StartupQueue();
 
+#if 0
 	/* icons */
 	Icons[0] = (Pointer)GetSysIcon(getFileIcon, 0x04, 0x0000); // text
 	Icons[1] = (Pointer)GetSysIcon(getFileIcon, 0x0f, 0x0000); // folder
 	Icons[2] = (Pointer)GetSysIcon(getFileIcon, 0x06, 0x0000); // binary.
 	Icons[3] = (Pointer)GetSysIcon(getFileIcon, 0xdd, 0x0000); // document
+#endif
+
+	Icons[0] = (Pointer)GetIcon(kIconText); // text
+	Icons[1] = (Pointer)GetIcon(kIconFolder); // folder
+	Icons[2] = (Pointer)GetIcon(kIconBinary); // binary.
+	Icons[3] = (Pointer)GetIcon(kIconDocument); // document
+
 
 	window_active = 0;
 	window_count = 0;

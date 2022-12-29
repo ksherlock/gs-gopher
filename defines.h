@@ -42,3 +42,10 @@
 #define kGopherURL kURLWindow+1
 #define kGopherIndex kIndexWindow+1
 #define kGopherText kTextWindow+1
+
+#define kIconText 1
+#define kIconBinary 2
+#define kIconDocument 3
+#define kIconSource 4
+#define kIconFolder 5
+#define kIconFolderOpen 6

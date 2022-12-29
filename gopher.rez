@@ -466,6 +466,175 @@ resource rControlTemplate (kGopherText) {
 };
 
 
+/* Some of the GetSysIcons have incorrect masks */
+
+// folder
+// ..***.....
+// .*...****.
+// .*.......*
+// .*.......*
+// .*.......*
+// .*.......*
+// .*********
+// ..........
+resource rIcon (kIconFolder) {
+	$0000, // type
+	8, 10, // height, width
+	$"ff000fffff"
+	$"f0efe0000f"
+	$"f0fefefef0"
+	$"f0efefefe0"
+	$"f0fefefef0"
+	$"f0efefefe0"
+	$"f000000000"
+	$"ffffffffff",
+
+	$"00fff00000"
+	$"0ffffffff0"
+	$"0fffffffff"
+	$"0fffffffff"
+	$"0fffffffff"
+	$"0fffffffff"
+	$"0fffffffff"
+	$"0000000000"
+};
+
+// open folder icon
+// ....***.....
+// ...*...****.
+// ...*.......*
+// *********..*
+// .*.......*.*
+// ..*.......**
+// ...*********
+// ............
+resource rIcon (kIconFolderOpen) {
+	$0000, // type
+	8, 12, // height, width
+
+	$"ffff000fffff"
+	$"fff0efe0000f"
+	$"fff0fefefef0"
+	$"000000000fe0"
+	$"f0fefefef0f0"
+	$"ff0fefefef00"
+	$"fff000000000"
+	$"ffffffffffff",
+
+	$"0000fff00000"
+	$"000ffffffff0"
+	$"000fffffffff"
+	$"ffffffffffff"
+	$"0fffffffffff"
+	$"00ffffffffff"
+	$"000fffffffff"
+	$"000000000000"
+};
+
+// generic document 
+// ............
+// ..*******...
+// ..*....*.*..
+// ..*....***..
+// ..*......*..
+// ..*......*..
+// ..*......*..
+// ..********..
+resource rIcon (kIconDocument) {
+	$0000, // type
+	8, 12, // height, width
+
+	$"ff0000000fff"
+	$"ff0ffff0f0ff"
+	$"ff0ffff000ff"
+	$"ff0ffffff0ff"
+	$"ff0ffffff0ff"
+	$"ff0ffffff0ff"
+	$"ff0ffffff0ff"
+	$"ff00000000ff",
+
+	$"00fffffff000"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+
+};
+
+// binary
+resource rIcon (kIconBinary) {
+	$0000, // type
+	8, 12, // height, width
+
+	$"ff0000000fff"
+	$"ff0ff0f0f0ff"
+	$"ff0ff0f000ff"
+	$"ff0ff0fff0ff"
+	$"ff0f0fc0c0ff"
+	$"ff0f0f0f00ff"
+	$"ff0f0fc0c0ff"
+	$"ff00000000ff",
+
+	$"00fffffff000"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00",
+};
+
+// text
+resource rIcon (kIconText) {
+	$0000, // type
+	8, 12, // height, width
+
+	$"ff0000000fff"
+	$"ff0ffff0f0ff"
+	$"ff0f00f000ff"
+	$"ff0ffffff0ff"
+	$"ff0f0f00f0ff"
+	$"ff0ffffff0ff"
+	$"ff0f0f0ff0ff"
+	$"ff00000000ff",
+
+	$"00fffffff000"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00",
+};
+
+// source code
+resource rIcon (kIconSource) {
+	$0000, // type
+	8, 12, // height, width
+
+	$"ff0000000fff"
+	$"ff0ffff0f0ff"
+	$"ff0fddf000ff"
+	$"ff0ffffff0ff"
+	$"ff0fdfddf0ff"
+	$"ff0ffffff0ff"
+	$"ff0fdfdff0ff"
+	$"ff00000000ff",
+
+	$"00fffffff000"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00"
+	$"00ffffffff00",
+};
 
 
 type rAlertString {
