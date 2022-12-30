@@ -222,6 +222,33 @@ void OpenEventHook(WmTaskRec *event) {
 #pragma toolparms 0
 #pragma databank 0
 
+
+void DoAbout(void) {
+
+#if 0
+	AlertWindow(refIsResource << 1, NULL, 1);
+#else
+	GrafPortPtr win;
+	long id;
+
+	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kAboutWindow, rWindParam1);
+
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
+		id = DoModalWindow(&event, NULL, NULL, (VoidProcPtr)-1, flags);
+		#undef flags
+
+		if (id == kAboutButton) break;
+
+		ProcessQueue();
+	}
+
+	CloseWindow(win);
+	InitCursor();
+#endif
+}
+
+
 void DoOpen(void) {
 
 	static char text[256];
@@ -415,6 +442,8 @@ void DoCloseWindow(GrafPortPtr win) {
 
 }
 
+
+
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
 	unsigned menu = event.wmTaskData >> 16;
@@ -432,7 +461,7 @@ void DoMenu(void) {
 			break;
 
 		case kAbout:
-			AlertWindow(refIsResource << 1, NULL, 1);
+			DoAbout();
 			break;
 		case kOpenItem:
 			DoOpen();

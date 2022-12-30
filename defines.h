@@ -38,10 +38,16 @@
 #define kURLWindow 0x0300
 #define kPrefsWindow 0x0400
 #define kNetworkWindow 0x0500
+#define kAboutWindow 0x0600
 
 #define kGopherURL kURLWindow+1
 #define kGopherIndex kIndexWindow+1
 #define kGopherText kTextWindow+1
+
+#define kAboutButton kAboutWindow+1
+#define kAboutIcon kAboutWindow+2
+#define kAboutText kAboutWindow+3
+
 
 #define kIconText 1
 #define kIconBinary 2

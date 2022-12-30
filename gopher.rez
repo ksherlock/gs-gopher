@@ -659,8 +659,8 @@ type rAlertString {
 		case iconCustom:
 			key byte = 0x31;
 			longint;
-			int;
-			int;
+			int; // width, in bytes
+			int; // height
 		case iconStop: key byte = 0x32;
 		case iconNote: key byte = 0x33;
 		case iconCaution: key byte = 0x34;
@@ -672,9 +672,445 @@ type rAlertString {
 	string = $"00";
 };
 
+#define kGopherHeadIcon 100
+
 resource rAlertString(1) {
 
 	size30 {},
-	iconNone {},
+	iconCustom { kGopherHeadIcon, 21, 38},
 	"~Gopher 1.0~^#0"
+};
+
+
+
+////
+
+
+resource rIcon(kGopherHeadIcon) {
+	$8000, // type
+	38, // height
+	42, // width
+
+	$"ffffffffffffffffff0000000000000fffffffffff"
+	$"fffffffffffffffff12331dfffffffc0ffffffffff"
+	$"fffffffffff0000000d5b13dddfffdff0fffffffff"
+	$"ffffffffff0fffffefffffffffeeffffc0ffffffff"
+	$"ffffffff009fffdeff2ffffecfff7ffff0ffffffff"
+	$"fffffff0fffe4feffffec404ec40e00eff0fffffff"
+	$"ffffff03ffff8feefffee440eee22ddcff0fffffff"
+	$"fffff0ffeccefefff33ffeee4cd0c6c322f0ffffff"
+	$"ffff0fefecceeffffdb3ffeececc4e253ff40fffff"
+	$"fff0f40fe6e44670030003f67eeee442517fd0ffff"
+	$"ff0ff40fee6e07700d0003dce7fee604c01fe00fff"
+	$"f0ff000e66cdffff000000ff327fffec8fffff0fff"
+	$"f0ff000ececcffff000000ffb1eefffc6effff00ff"
+	$"0ffe00efecee4effffffffc00673eeffffc000fc0f"
+	$"0ffc006fe6eccefffffffff004efccfffef510f00f"
+	$"0effffffffffffeeefecc46eefffffef1000003f0c"
+	$"0eeeeffffffffefe6ee8cccfeff3ffffc000003f0c"
+	$"07ffffffeeffefe6e666e1ffffffffbdf30000f10c"
+	$"0effffffffeff6eccee7e3fffcfff3ffdd0000ff0c"
+	$"0ffffffe7e40b6ec007c3f2cce6c991001003f30cc"
+	$"0fffffffeff0ce6e07cf22cf23cf333000d0bfd0cf"
+	$"0feeeeffeff37f46fcc04cfbfb310000000bfd0ccf"
+	$"07fff77fffc8eecc8e608cce2d9b10000003fd0cff"
+	$"f0feffeeceffe73cc80dccf0d310000000bff0ccff"
+	$"f0fffffffe6eee77c88278dff9000000003ff0cfff"
+	$"ff0feef66ee0c0274c0c87c10000030d0bfd0ccfff"
+	$"ff0fffeeceecc0224e530af01015555502ff0cffff"
+	$"ff0eccece6e66e7c22f6219d800f30000fd0ccffff"
+	$"ff07fecee7ece6238fcd8a300501d5500ff0cfffff"
+	$"fff06eece80303de0832318b3000033f3f0ccfffff"
+	$"fff0eccefe7d002d83374dd0d8000d33cf0cffffff"
+	$"ffff0e4008ceffb37991991d3df33000bd0cffffff"
+	$"ffff06e0277dccfcd3330cd9dddb10001b0cffffff"
+	$"fffff00e48e67c03732300000001b33330ccffffff"
+	$"ffffff0cc227cf30d9710000000319ddd0cfffffff"
+	$"fffffff0267000000000ccccccc0300000cfffffff"
+	$"ffffffff000ccccccccccfffffff00000ccfffffff"
+	$"fffffffffcccfffffffffffffffffcccccffffffff"
+	,
+	$"000000000000000000fffffffffffff00000000000"
+	$"00000000000000000fffffffffffffff0000000000"
+	$"00000000000ffffffffffffffffffffff000000000"
+	$"0000000000ffffffffffffffffffffffff00000000"
+	$"00000000ffffffffffffffffffffffffff00000000"
+	$"0000000ffffffffffffffffffffffffffff0000000"
+	$"000000fffffffffffffffffffffffffffff0000000"
+	$"00000fffffffffffffffffffffffffffffff000000"
+	$"0000fffffffffffffffffffffffffffffffff00000"
+	$"000fffffffffffffffffffffffffffffffffff0000"
+	$"00fffffffffffffffffffffffffffffffffffff000"
+	$"0ffffffffffffffffffffffffffffffffffffff000"
+	$"0fffffffffffffffffffffffffffffffffffffff00"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"ffffffffffffffffffffffffffffffffffffffff00"
+	$"0fffffffffffffffffffffffffffffffffffffff00"
+	$"0ffffffffffffffffffffffffffffffffffffff000"
+	$"00fffffffffffffffffffffffffffffffffffff000"
+	$"00ffffffffffffffffffffffffffffffffffff0000"
+	$"00ffffffffffffffffffffffffffffffffffff0000"
+	$"00fffffffffffffffffffffffffffffffffff00000"
+	$"000ffffffffffffffffffffffffffffffffff00000"
+	$"000fffffffffffffffffffffffffffffffff000000"
+	$"0000ffffffffffffffffffffffffffffffff000000"
+	$"0000ffffffffffffffffffffffffffffffff000000"
+	$"00000fffffffffffffffffffffffffffffff000000"
+	$"000000fffffffffffffffffffffffffffff0000000"
+	$"0000000ffffffffffffffffffffffffffff0000000"
+	$"00000000fffffffffffff0000000fffffff0000000"
+	$"000000000fff00000000000000000fffff00000000"
+
+};
+
+resource rIcon(101) {
+	$0000, // type
+	8, // height
+	8, // width
+
+	$"ffc003ff"
+	$"ff300cff"
+	$"cf0000f3"
+	$"0303c0c0"
+	$"f0300c0f"
+	$"f00ff00f"
+	$"f00ff00f"
+	$"00000000"
+	,
+	$"00ffff00"
+	$"00ffff00"
+	$"f0ffff0f"
+	$"ffffffff"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"ffffffff"
+
+};
+
+resource rIcon(102) {
+	$8000, // type
+	18, // height
+	36, // width
+
+	$"ffffffffffffffffffffffffffffffffffff"
+	$"fffff0000700000446440400003f0000ffff"
+	$"ffffff064046ce7cf6f6cf6cc440040fffff"
+	$"fffff406eeece76767667666fffec4ffffff"
+	$"ffff006ff407ccccccccccccc44fec40ffff"
+	$"fff0466c00e47ccce77ce66e4ec077c40fff"
+	$"ff046ccfe000ecccccccccce001fe77c40ff"
+	$"f006e67cf000f6eefffffeff000f7667c40f"
+	$"f0674cc76eeeeff4000007eeffe6cccce40f"
+	$"f04ee77ccccce00009d9000766777ccf7e0c"
+	$"f0076cccccccfe000010000eccccc77cc00c"
+	$"ff00cecccce7c6ffc0006ff66f777cec40cc"
+	$"fff00cee7cccfc000fff0007766cee440ccf"
+	$"ffff0047f7f677ee4fff47ffecf7c400ccff"
+	$"fffff0004ccf6e7cc4446f6cce4c000ccfff"
+	$"fffffff00000c7676c8cf66400000cccffff"
+	$"fffffffff00000000000000000ccccffffff"
+	$"ffffffffffffcccccccccccccccfffffffff"
+	,
+	$"000000000000000000000000000000000000"
+	$"00000ffffffffffffffffffffff0ffff0000"
+	$"000000fffffffffffffffffffffffff00000"
+	$"00000fffffffffffffffffffffffff000000"
+	$"0000ffffffffffffffffffffffffffff0000"
+	$"000ffffffffffffffffffffffffffffff000"
+	$"00ffffffffffffffffffffffffffffffff00"
+	$"0ffffffffffffffffffffffffffffffffff0"
+	$"0ffffffffffffffffffffffffffffffffff0"
+	$"0fffffffffffffffffffffffffffffffffff"
+	$"0fffffffffffffffffffffffffffffffffff"
+	$"00ffffffffffffffffffffffffffffffffff"
+	$"000ffffffffffffffffffffffffffffffff0"
+	$"0000ffffffffffffffffffffffffffffff00"
+	$"00000ffffffffffffffffffffffffffff000"
+	$"0000000fffffffffffffffffffffffff0000"
+	$"000000000fffffffffffffffffffff000000"
+	$"000000000000fffffffffffffff000000000"
+
+};
+
+resource rIcon(103) {
+	$0000, // type
+	8, // height
+	8, // width
+
+	$"ffc003ff"
+	$"ff300cff"
+	$"cf0000f3"
+	$"0303c0c0"
+	$"f0300c0f"
+	$"f00ff00f"
+	$"f00ff00f"
+	$"00000000"
+	,
+	$"00ffff00"
+	$"00ffff00"
+	$"f0ffff0f"
+	$"ffffffff"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"ffffffff"
+
+};
+
+resource rIcon(104) {
+	$0000, // type
+	18, // height
+	16, // width
+
+	$"ffffffffffffffff"
+	$"ffff3c00003cffff"
+	$"fff0000000000fff"
+	$"ffff00f00f00ffff"
+	$"fffc000000003fff"
+	$"fff0000300000fff"
+	$"fcf000ffff000f3f"
+	$"f00f000ff000f00f"
+	$"fc00f000000f003f"
+	$"ff000ff00ff000ff"
+	$"ffc0000ff00003ff"
+	$"ffc000ffff0003ff"
+	$"ffc00ffff0f003ff"
+	$"fff00f0f0ff00fff"
+	$"fff000f0ff000fff"
+	$"ff00000ff00000ff"
+	$"ff000000000000ff"
+	$"ffffffffffffffff"
+	,
+	$"0000ffffffff0000"
+	$"000ffffffffff000"
+	$"00ffffffffffff00"
+	$"000ffffffffff000"
+	$"00ffffffffffff00"
+	$"0ffffffffffffff0"
+	$"ffffffffffffffff"
+	$"ffffffffffffffff"
+	$"ffffffffffffffff"
+	$"0ffffffffffffff0"
+	$"0ffffffffffffff0"
+	$"0ffffffffffffff0"
+	$"0ffffffffffffff0"
+	$"00ffffffffffff00"
+	$"00ffffffffffff00"
+	$"0ffffffffffffff0"
+	$"0ffffffffffffff0"
+	$"0ffffffffffffff0"
+
+};
+
+resource rIcon(105) {
+	$0000, // type
+	8, // height
+	8, // width
+
+	$"ffc003ff"
+	$"ff300cff"
+	$"cf0000f3"
+	$"0303c0c0"
+	$"f0300c0f"
+	$"f00ff00f"
+	$"f00ff00f"
+	$"00000000"
+	,
+	$"00ffff00"
+	$"00ffff00"
+	$"f0ffff0f"
+	$"ffffffff"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"0ffffff0"
+	$"ffffffff"
+
+};
+
+
+// About
+
+#define kAboutHeight 60
+#define kAboutWidth 380
+resource rWindParam1 (kAboutWindow) {
+	0x20A0,
+	0x0,
+	0x0,
+	{0, 0, 0, 0},
+	0x0,
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	0,
+	{60, 130, 60+kAboutHeight, 130+kAboutWidth},
+	infront,
+	kAboutWindow,
+	0x9
+};
+
+
+resource rControlList (kAboutWindow) {
+	{ kAboutButton, kAboutIcon, kAboutText }
+};
+
+resource rControlTemplate (kAboutText) {
+	0x3,
+	{10, 104, 40, kAboutWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kAboutText,
+			0,
+			leftJust
+		}
+	}
+};
+
+resource rTextForLETextBox2 (kAboutText) {
+	TBForeColor TBColor0
+	TBBackColor TBColorF
+	"GS-Gopher 1.0\n"
+	TBStyleItalic
+	"2022-12-29\n"
+};
+
+
+resource rControlTemplate (kAboutButton) {
+	kAboutButton,
+	{kAboutHeight - 5 - 13, kAboutWidth - 10 - 100, kAboutHeight-5, kAboutWidth - 10},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x3, // square, drop shadow.
+			FctlProcNotPtr + FctlWantsEvents + refIsResource,
+			0x0,
+			kAboutButton,
+			0x0,
+			{
+				"\n",
+				"\n",
+				0x0,
+				0x0
+			}
+		}
+	}
+};
+
+
+resource rPString (kAboutButton) {
+	"Geomyidae"
+};
+
+resource rControlTemplate (kAboutIcon) {
+	kAboutIcon,
+	{10, 10, 10+38, 10+42*2},
+	IconButtonControl {
+		 {	/* optional Fields */
+			0x4+0x08, // no border, disabled
+			FctlProcNotPtr + (refIsResource << 4),
+			0x0,
+			kAboutIcon,
+			0x0,
+			0x0,
+			0x0
+		}
+	}
+};
+
+resource rIcon(kAboutIcon) {
+	$8000, // type
+	38, // height
+	42, // width
+
+	$"ffffffffffffffffff0000000000000fffffffffff"
+	$"fffffffffffffffff12331dfffffffc0ffffffffff"
+	$"fffffffffff0000000d5b13dddfffdff0fffffffff"
+	$"ffffffffff0fffffefffffffffeeffffc0ffffffff"
+	$"ffffffff009fffdeff2ffffecfff7ffff0ffffffff"
+	$"fffffff0fffe4feffffec404ec40e00eff0fffffff"
+	$"ffffff03ffff8feefffee440eee22ddcff0fffffff"
+	$"fffff0ffeccefefff33ffeee4cd0c6c322f0ffffff"
+	$"ffff0fefecceeffffdb3ffeececc4e253ff40fffff"
+	$"fff0f40fe6e44670030003f67eeee442517fd0ffff"
+	$"ff0ff40fee6e07700d0003dce7fee604c01fe00fff"
+	$"f0ff000e66cdffff000000ff327fffec8fffff0fff"
+	$"f0ff000ececcffff000000ffb1eefffc6effff00ff"
+	$"0ffe00efecee4effffffffc00673eeffffc000fc0f"
+	$"0ffc006fe6eccefffffffff004efccfffef510f00f"
+	$"0effffffffffffeeefecc46eefffffef1000003f0c"
+	$"0eeeeffffffffefe6ee8cccfeff3ffffc000003f0c"
+	$"07ffffffeeffefe6e666e1ffffffffbdf30000f10c"
+	$"0effffffffeff6eccee7e3fffcfff3ffdd0000ff0c"
+	$"0ffffffe7e40b6ec007c3f2cce6c991001003f30cc"
+	$"0fffffffeff0ce6e07cf22cf23cf333000d0bfd0cf"
+	$"0feeeeffeff37f46fcc04cfbfb310000000bfd0ccf"
+	$"07fff77fffc8eecc8e608cce2d9b10000003fd0cff"
+	$"f0feffeeceffe73cc80dccf0d310000000bff0ccff"
+	$"f0fffffffe6eee77c88278dff9000000003ff0cfff"
+	$"ff0feef66ee0c0274c0c87c10000030d0bfd0ccfff"
+	$"ff0fffeeceecc0224e530af01015555502ff0cffff"
+	$"ff0eccece6e66e7c22f6219d800f30000fd0ccffff"
+	$"ff07fecee7ece6238fcd8a300501d5500ff0cfffff"
+	$"fff06eece80303de0832318b3000033f3f0ccfffff"
+	$"fff0eccefe7d002d83374dd0d8000d33cf0cffffff"
+	$"ffff0e4008ceffb37991991d3df33000bd0cffffff"
+	$"ffff06e0277dccfcd3330cd9dddb10001b0cffffff"
+	$"fffff00e48e67c03732300000001b33330ccffffff"
+	$"ffffff0cc227cf30d9710000000319ddd0cfffffff"
+	$"fffffff0267000000000ccccccc0300000cfffffff"
+	$"ffffffff000ccccccccccfffffff00000ccfffffff"
+	$"fffffffffcccfffffffffffffffffcccccffffffff"
+	,
+	$"000000000000000000fffffffffffff00000000000"
+	$"00000000000000000fffffffffffffff0000000000"
+	$"00000000000ffffffffffffffffffffff000000000"
+	$"0000000000ffffffffffffffffffffffff00000000"
+	$"00000000ffffffffffffffffffffffffff00000000"
+	$"0000000ffffffffffffffffffffffffffff0000000"
+	$"000000fffffffffffffffffffffffffffff0000000"
+	$"00000fffffffffffffffffffffffffffffff000000"
+	$"0000fffffffffffffffffffffffffffffffff00000"
+	$"000fffffffffffffffffffffffffffffffffff0000"
+	$"00fffffffffffffffffffffffffffffffffffff000"
+	$"0ffffffffffffffffffffffffffffffffffffff000"
+	$"0fffffffffffffffffffffffffffffffffffffff00"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"ffffffffffffffffffffffffffffffffffffffffff"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"fffffffffffffffffffffffffffffffffffffffff0"
+	$"ffffffffffffffffffffffffffffffffffffffff00"
+	$"0fffffffffffffffffffffffffffffffffffffff00"
+	$"0ffffffffffffffffffffffffffffffffffffff000"
+	$"00fffffffffffffffffffffffffffffffffffff000"
+	$"00ffffffffffffffffffffffffffffffffffff0000"
+	$"00ffffffffffffffffffffffffffffffffffff0000"
+	$"00fffffffffffffffffffffffffffffffffff00000"
+	$"000ffffffffffffffffffffffffffffffffff00000"
+	$"000fffffffffffffffffffffffffffffffff000000"
+	$"0000ffffffffffffffffffffffffffffffff000000"
+	$"0000ffffffffffffffffffffffffffffffff000000"
+	$"00000fffffffffffffffffffffffffffffff000000"
+	$"000000fffffffffffffffffffffffffffff0000000"
+	$"0000000ffffffffffffffffffffffffffff0000000"
+	$"00000000fffffffffffff0000000fffffff0000000"
+	$"000000000fff00000000000000000fffff00000000"
+
 };
