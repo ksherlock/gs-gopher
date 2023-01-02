@@ -17,6 +17,7 @@
 #include <tcpip.h>
 #include <textedit.h>
 #include <window.h>
+#include <font.h>
 
 
 #include <stdlib.h>
@@ -96,10 +97,19 @@ static Pointer GetIcon(unsigned ix) {
 	return 0;
 }
 
+Handle SystemFont;
+Handle MonacoFont;
+
 static void Setup(void) {
 
 	Handle h;
 	/* menu bars */
+
+	FontID Monaco = {
+		{ monaco, 0, 9}
+	};
+	FontStatRec fsr;
+
 
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
 	SetMenuBar(0);
@@ -134,6 +144,33 @@ static void Setup(void) {
 		NetworkUpdate(0);
 	}
 	AcceptRequests(ReqName, MyID, &HandleRequest);
+
+
+
+
+	// extern pascal void InstallFontL(LongWord, Word) inline(0x0E1B,dispatcher);
+
+	/* Get a handle to 9ptr monaco for fixed-width text */
+	SystemFont = (Handle)GetFont();
+	InstallFont(Monaco, 0);
+	if (!_toolErr) {
+		unsigned long size;
+
+		FindFontStats(Monaco, 0, 1, &fsr);
+		if (_toolErr) goto ff;
+		if (fsr.resultStats & (notFoundBit|unrealBit)) goto ff;
+
+		h = (Handle)GetFont();
+		size = GetHandleSize(h);
+		MonacoFont = NewHandle(size, MyID, attrNoSpec, 0);
+		if (_toolErr) {
+			MonacoFont = 0;
+			goto ff;
+		}
+		HandToHand(h, MonacoFont, size);
+	}
+ff:
+	SetFont((FontHndl)SystemFont);
 }
 
 Pointer IconForType(unsigned type) {
@@ -320,6 +357,13 @@ void DoOpen(void) {
 
 void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
+	static TEStyle style = {
+		// 0x09000004, // font id
+		{ monaco, 0, 9},
+		0x0000, 0xffff, // fore gound, back ground
+		0x0000 // user data
+	};
+
 	GrafPortPtr win;
 	Handle teH;
 
@@ -330,7 +374,13 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
 
+	(**((TERecord **)teH)).textFlags &= ~fReadOnly;
+
+	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &style, teH);
 	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
+
+	(**((TERecord **)teH)).textFlags |= fReadOnly;
+
 }
 #pragma toolparms 1
 #pragma databank 1
@@ -343,6 +393,12 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	static unsigned char NorMask[] = {
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	};
+
+#if 0
+	static FontID Monaco = {
+		{ monaco, 0, 9}
+	};
+#endif
 
 	void *iconPtr = nil;
 	unsigned width = rectPtr->h2 - rectPtr->h1 - 32;
@@ -377,7 +433,14 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	}
 #endif
 
+#if 0
+	SetFontID(Monaco);
+	SetTextSize(9);
+	SetTextFace(0);
+#endif
+	if (MonacoFont) SetFont((FontHndl)MonacoFont);
 	DrawStringWidth(dswTruncRight + dswPString + dswStrIsPtr, (Ref)entry->name, width);
+	if (MonacoFont) SetFont((FontHndl)SystemFont);
 
 	if (memFlags & memDisabled) {
 		SetPenMask(DimMask);
