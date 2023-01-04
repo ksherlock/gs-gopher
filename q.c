@@ -198,6 +198,7 @@ static unsigned ReadText(DownloadItem *item) {
 			cp += item->size;
 		}
 
+		// todo -- if line is ..\r, store as .\r
 
 		for (i = 0, j = 0; i < (unsigned)rr.rrBuffCount; ++i) {
 			unsigned c = buffer[i];
@@ -610,8 +611,14 @@ unsigned OneLine(char *ptr, ListEntry *e){
 }
 
 static unsigned TitleLength(DownloadItem *item) {
-	unsigned len = item->host[0] + 3;
-	if (item->selector) len += item->selector[0] + 3;
+	char *nm;
+	unsigned len = 0;
+
+	nm = item->host;
+	len = nm[0] + 3;
+
+	nm = item->selector;
+	if (nm && *nm) len += nm[0] + 3;
 	return len;
 }
 
@@ -628,7 +635,7 @@ static char *TitleCopy(char *cp, unsigned len, DownloadItem *item) {
 	*cp++ = ' ';
 
 	nm = item->selector;
-	if (nm) {
+	if (nm && *nm) {
 
 		*cp++ = '-';
 		*cp++ = ' ';

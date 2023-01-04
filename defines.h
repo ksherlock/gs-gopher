@@ -12,7 +12,8 @@
 
 #define	AppleBase	0x1000
 #define FileBase	0x2000
-#define NetworkBase 0x3000
+#define EditBase	0x3000
+#define NetworkBase 0x4000
 
 
 #define	kAbout		AppleBase+0
@@ -24,6 +25,8 @@
 #define	kPageSetupItem	FileBase+3
 #define	kPrintItem	FileBase+4
 #define	kQuitItem	FileBase+5
+
+#define kSelectAllItem EditBase+0
 
 #define kConnectItem NetworkBase+0
 #define kDisconnectItem NetworkBase+1

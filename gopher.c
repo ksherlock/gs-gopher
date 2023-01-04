@@ -178,6 +178,9 @@ Pointer IconForType(unsigned type) {
 		case '0': return Icons[0]; /* text */
 		case '1': return Icons[1]; /* directory/index */
 		case '9': return Icons[2]; /* binary */
+		case 'i': /* informational */
+		case '3': /* error */
+			return NULL;
 		default: return Icons[3];
 	}
 }
@@ -355,6 +358,48 @@ void DoOpen(void) {
 }
 
 
+#define kPageUp 't'
+#define kPageDown 'y'
+#define kHome 's'
+#define kEnd 'w'
+
+#pragma toolparms 1
+#pragma databank 1
+
+enum {
+	opNormal = 0,
+	opNothing = 2,
+	opReplaceTest = 4,
+	opMoveCursor = 6,
+	opExtendCursor = 8,
+	opCut = 10,
+	opCopy = 12,
+	opPaste = 14,
+	opClear = 16
+};
+
+static pascal void KeyFilter(Handle teH, unsigned type) {
+	if (type == 1) {
+		// 
+		TERecord *te = *(TERecord **)teH;
+		unsigned c = te->theKeyRecord.theChar;
+		unsigned mod = te->theKeyRecord.theModifiers;
+
+		if (mod & keyPad) c |= 0x80;
+		if (c == ' ' || c == kPageUp|0x80 || c == kPageDown|0x80 || c == kHome|0x80 || c == kEnd|0x80) {
+			te->theKeyRecord.theOpCode = opNothing;
+			PostEvent(app4Evt, c);
+		}
+		else {
+			te->theKeyRecord.theOpCode = opNormal;
+		}
+	}
+}
+
+#pragma toolparms 0
+#pragma databank 0
+
+
 void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	static TEStyle style = {
@@ -380,6 +425,7 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
 
 	(**((TERecord **)teH)).textFlags |= fReadOnly;
+	(**((TERecord **)teH)).keyFilter = (ProcPtr)KeyFilter;
 
 }
 #pragma toolparms 1
@@ -425,7 +471,7 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 
 	SetForeColor(0x0000);
 	SetTextMode(0);
-	MoveTo(rectPtr->h1 + 32, rectPtr->v2 - 1);
+	MoveTo(rectPtr->h1 + 32, rectPtr->v2 - 2);
 
 #if 0
 	if (memFlags & memDisabled) {
@@ -439,17 +485,16 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	SetTextFace(0);
 #endif
 	if (MonacoFont) SetFont((FontHndl)MonacoFont);
-	DrawStringWidth(dswTruncRight + dswPString + dswStrIsPtr, (Ref)entry->name, width);
+	DrawStringWidth(dswNoCondense | dswTruncRight | dswPString | dswStrIsPtr, (Ref)entry->name, width);
 	if (MonacoFont) SetFont((FontHndl)SystemFont);
 
+#if 0
 	if (memFlags & memDisabled) {
 		SetPenMask(DimMask);
 		EraseRect(rectPtr);
 		SetPenMask(NorMask);
 	}
-
-
-
+#endif
 }
 
 #pragma toolparms 0
@@ -505,6 +550,21 @@ void DoCloseWindow(GrafPortPtr win) {
 
 }
 
+void DoSelectAll(void) {
+	Handle teH;
+
+	GrafPortPtr win = FrontWindow();
+	if (!win) return;
+
+	if (GetSysWFlag(win)) return;
+
+	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+
+	if (_toolErr || !teH) return;
+
+	TESetSelection((Pointer)0, (Pointer)-1, teH);
+
+}
 
 
 void DoMenu(void) {
@@ -522,6 +582,11 @@ void DoMenu(void) {
 		case kCloseItem:
 			DoCloseWindow(0);
 			break;
+
+		case kSelectAllItem:
+			DoSelectAll();
+			break;
+
 
 		case kAbout:
 			DoAbout();
@@ -557,6 +622,126 @@ void OpenIndex(ListCtlRec *rec) {
 	}
 }
 
+void DoIndexKey(GrafPortPtr win) {
+
+	// CtlRecPtr ctrlPtr;
+	ListCtlRec *list;
+	CtlRecHndl ctrlH = GetCtlHandleFromID(win, kGopherIndex);
+	if (_toolErr || !ctrlH) return;
+
+	// ctrlPtr = *ctrlH;
+
+	unsigned c = event.message;
+	if (event.modifiers & keyPad) c |= 0x80;
+
+	list = *(ListCtlRec **)ctrlH;
+	unsigned total = list->ctlData >> 16;
+
+	switch(c) {
+		case 0x0a:
+		case 0x0b:
+			// up/down
+			SetPort(win);
+			ListKey(0, &event, ctrlH);
+			break;
+		#if 0
+		case 0x0d:
+			OpenIndex((ListCtlRec *)ctrlPtr);
+			break;
+		#endif
+		case ' ':
+		case kPageDown|0x80: {
+			unsigned index = list->ctlValue + (list->ctlData & 0xffff);
+			if (index < total) {
+				SetCtlValue(index, ctrlH);
+			}
+			break;
+		}
+		case kPageUp|0x80:
+			break;
+		case kHome|0x80:
+			SetCtlValue(1, ctrlH);
+			break;
+	}
+
+}
+
+void DoTextKey(GrafPortPtr win) {
+	TERecord *te;
+	unsigned c;
+
+	Handle teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+	if (_toolErr || !teH) return;
+
+	te = *(TERecord **)teH;
+	c = event.message;
+
+	if (event.modifiers & keyPad) c |= 0x80;
+
+	if (c == ' ' || c == (kPageDown|0x80)) {
+		// page down
+		int h = te->viewRect.v2 - te->viewRect.v1;
+		h /= te->vertScrollAmount;
+		TEScroll(teScrollRelUnit, h, 0, teH);
+	}
+	if (c == (kPageUp|0x80)) {
+		int h = te->viewRect.v2 - te->viewRect.v1;
+		h /= te->vertScrollAmount;
+		TEScroll(teScrollRelUnit, -h, 0, teH);	
+	}
+	if (c == (kHome|0x80)) {
+		TEScroll(teScrollAbsUnit, 0, 0, teH);
+	}
+	if (c == (kEnd|0x80)) {
+		TEScroll(teScrollAbsUnit, 0x7fffffff, 0, teH);
+	}
+}
+
+// app4Event via Text Edit key filter.
+void DoTextKey2(void) {
+
+	TERecord *te;
+	unsigned c;
+
+
+	GrafPortPtr win = FrontWindow();
+	if (_toolErr || !win) return;
+
+	Handle teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+	if (_toolErr || !teH) return;
+
+	te = *(TERecord **)teH;
+	c = event.message;
+
+	int h = te->viewRect.v2 - te->viewRect.v1;
+
+
+	switch(c) {
+	case ' ':
+	case kPageDown|0x80:
+		h /= te->vertScrollAmount;
+		TEScroll(teScrollRelUnit, h, 0, teH);	
+		break;
+
+	case kPageUp|0x80:
+		h /= te->vertScrollAmount;
+		TEScroll(teScrollRelUnit, -h, 0, teH);	
+		break;
+
+	case kEnd|0x80:
+		TEScroll(teScrollAbsUnit, 0x7fffffff, 0, teH);
+		break;
+
+	case kHome|0x80:
+		TEScroll(teScrollAbsUnit, 0, 0, teH);
+		break;
+
+	}
+
+
+
+}
+
 void EventLoop(void) {
 	word taskCode;
 
@@ -588,48 +773,26 @@ void EventLoop(void) {
 
 			break;
 		}
+		case app4Evt:
+			DoTextKey2();
+			break;
 
 		case autoKeyEvt:
 		case keyDownEvt: {
 			// keyboard navigation for index?
 
+			cookie *c;
 			GrafPortPtr win = (GrafPortPtr)FrontWindow();
+			if (!win) break;
 			if (GetSysWFlag(win)) break; // NDA, etc.
 
-
-			CtlRecPtr ctrlPtr;
-
-			CtlRecHndl ctrlH = GetCtlHandleFromID(win, kGopherIndex); // FindTargetCtl();
-			if (_toolErr || !ctrlH) break;
-
-			ctrlPtr = *ctrlH;
-			if (ctrlPtr->ctlID == kGopherIndex) {
-				// pass up/down events to 
-				switch(event.message) {
-				case 0x0a:
-				case 0x0b:
-					// up/down
-					SetPort(win);
-					ListKey(0, &event, ctrlH);
-					break;
-				case ' ':
-				case 0x0d:
-					OpenIndex((ListCtlRec *)ctrlPtr);
-					break;
-				}
-
+			c = (cookie *)GetWRefCon(win);
+			if (!c) break;
+			if (c->type == kGopherTypeIndex) {
+				DoIndexKey(win);
+			} else {
+				DoTextKey(win);
 			}
-
-#if 0
-			GrafPortPtr win = (GrafPortPtr)FrontWindow();
-			if (GetSysWFlag(win)) break; // NDA, etc.
-			asm {
-				ldx #event
-				ldy #^event
-				brk 0xea
-			}
-#endif
-
 			break;
 		}
 

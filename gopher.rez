@@ -88,7 +88,8 @@ resource rMenu (kEditMID, nocrossbank){
         kCutItem,
         kCopyItem,
         kPasteItem,
-        kClearItem
+        kClearItem,
+        kSelectAllItem
     };
 };
 
@@ -149,6 +150,16 @@ resource rMenuItem (kClearItem, nocrossbank){
     0x8000,
     kClearItem
 };
+
+resource rMenuItem (kSelectAllItem, nocrossbank){
+    kSelectAllItem,
+    "A",
+    "a",
+    0,
+    0x8000,
+    kSelectAllItem
+};
+
 
 resource rMenuItem (kAbout, nocrossbank){
 	kAbout,
@@ -281,6 +292,7 @@ resource rPString (kCutItem, nocrossbank){"Cut"};
 resource rPString (kCopyItem, nocrossbank){"Copy"};
 resource rPString (kPasteItem, nocrossbank){"Paste"};
 resource rPString (kClearItem, nocrossbank){"Clear"};
+resource rPString (kSelectAllItem, nocrossbank){"Select All"};
 
 
 resource rPString (kConnectItem, nocrossbank){"Connect"};
@@ -434,7 +446,7 @@ resource rControlTemplate (kGopherIndex) {
 			0, /* list view */
 			fListSelect, /* list type */
 			1, /* list start */
-			10, /* list mem height */
+			12, /* list mem height */
 			0, /* list mem size */
 			0x0, /* list ref */
 			0x0, /* list color ref */
@@ -465,6 +477,11 @@ resource rControlTemplate (kGopherText) {
 	}
 };
 
+#if 0
+resource rStyleBlock (kGopherText) {
+
+}
+#endif
 
 /* Some of the GetSysIcons have incorrect masks */
 
