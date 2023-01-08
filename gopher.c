@@ -4,7 +4,9 @@
 #include <control.h>
 #include <desk.h>
 #include <event.h>
+#include <font.h>
 #include <gsos.h>
+#include <intmath.h>
 #include <lineedit.h>
 #include <list.h>
 #include <locator.h>
@@ -14,10 +16,10 @@
 #include <qdaux.h>
 #include <quickdraw.h>
 #include <resources.h>
+#include <scrap.h>
 #include <tcpip.h>
 #include <textedit.h>
 #include <window.h>
-#include <font.h>
 
 
 #include <stdlib.h>
@@ -566,6 +568,90 @@ void DoSelectAll(void) {
 
 }
 
+ListEntry *SelectedIndex(ListCtlRec *rec) {
+
+	ListEntry *e = (ListEntry *)rec->ctlList;
+	unsigned count = rec->ctlData >> 16;
+
+	unsigned i;
+
+	for (i = 0; i < count; ++i, ++e) {
+		if (e->flags & memSelected) {
+			return e;
+		}
+	}
+	return NULL;
+}
+
+void DoCopy(void) {
+	// TaskMaster manager copy from a Text window; this is for copying the
+	// selected URL from an index window.
+
+	GrafPortPtr win = FrontWindow();
+	if (!win) return;
+
+	if (GetSysWFlag(win)) return;
+
+	CtlRecHndl ctrlH = GetCtlHandleFromID(win, kGopherIndex);
+	if (_toolErr || !ctrlH) return;
+
+	ListCtlRec *list = *(ListCtlRec **)ctrlH;
+
+	ListEntry *e = SelectedIndex(list);
+	if (!e) return;
+
+
+	char *host = e->host;
+	char *selector = e->selector;
+
+	if (!host) return;
+
+	unsigned len;
+	len = *host + 2; // host/x
+	if (e->port != 70) {
+		len += 6; // :65535
+	}
+
+	if (selector) {
+		len += *selector;
+	}
+
+
+	char *cp = malloc(len);
+	if (!cp) return;
+
+	// make a url -
+	// host [:port] [/type/selector]
+
+	len = 0;
+	memcpy(cp, host + 1, *host);
+	len = *host;
+
+	if (e->port != 70) {
+		static char buffer[5];
+		int i;
+
+		cp[len++] = ':';
+		Int2Dec(e->port, buffer, sizeof(buffer), 0);
+
+		for(i = 0; i < 5; ++i) {
+			if (buffer[i] != ' ') cp[len++] = buffer[i];
+		}
+	}
+	cp[len++] = '/';
+	if (selector || e->type != kGopherTypeIndex) {
+		cp[len++] = e->type;
+	}
+	if (selector) {
+		memcpy(cp + len, selector + 1, *selector);
+		len += *selector;
+	}
+
+	ZeroScrap();
+	PutScrap(len, textScrap, cp);
+	free(cp);
+}
+
 
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
@@ -575,10 +661,14 @@ void DoMenu(void) {
 	switch (item) {
 		case kUndoItem:
 		case kCutItem:
-		case kCopyItem:
 		case kPasteItem:
 		case kClearItem:
 			break;
+
+		case kCopyItem:
+			DoCopy();
+			break;
+
 		case kCloseItem:
 			DoCloseWindow(0);
 			break;
