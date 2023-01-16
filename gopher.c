@@ -837,6 +837,39 @@ void DoCopy(void) {
 	free(cp);
 }
 
+void ToggleWrapText(void) {
+
+
+	static TEStyle style = {
+		// 0x09000004, // font id
+		{ FixedFontID, 0, FixedFontSize},
+		0x0000, 0xffff, // fore gound, back ground
+		0x0000 // user data
+	};
+
+	GrafPortPtr win = FrontWindow();
+
+
+	Handle teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+	if (_toolErr || !teH) return;
+
+	TERecord *tr = *(TERecord **)teH;
+	if (tr->textFlags & fNoWordWrap) {
+		tr->textFlags &= ~fNoWordWrap;
+		tr->textFlags &= ~fReadOnly;
+		CheckMItem(1, kWrapTextItem);
+	} else {
+		tr->textFlags |= fNoWordWrap;
+		tr->textFlags &= ~fReadOnly;
+		SetMItemMark(0, kWrapTextItem);
+	}
+
+	// call TEStyleChange to force a re-layout.
+	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &style, teH);
+
+	tr = *(TERecord **)teH;
+	tr->textFlags |= fReadOnly;
+}
 
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
@@ -860,6 +893,10 @@ void DoMenu(void) {
 
 		case kSelectAllItem:
 			DoSelectAll();
+			break;
+
+		case kWrapTextItem:
+			ToggleWrapText();
 			break;
 
 
