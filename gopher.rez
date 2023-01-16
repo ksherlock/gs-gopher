@@ -354,7 +354,7 @@ resource rPString (kAddBookmarkItem, nocrossbank){"Add Bookmark..."};
 
 resource rWindParam1 (kIndexWindow) {
 	// visibility toggled after
-	fTitle + fMove + fClose,
+	fTitle + fMove + fClose /* + fGrow + fBScroll */,
 	kIndexWindow, /* title id */
 	0x0,
 	{0, 0, 0, 0},
@@ -488,10 +488,10 @@ resource rControlTemplate (kGopherIndex) {
 			FctlProcNotPtr+FctlIsMultiPart /*+FctlCanBeTarget+FctlWantsEvents*/, /* more flags */
 			0x0, /* ref con */
 			0, /* list size */
-			0, /* list view */
+			0, /* list view -- height*/
 			fListSelect, /* list type */
 			1, /* list start */
-			12, /* list mem height */
+			10, /* list mem height */
 			0, /* list mem size */
 			0x0, /* list ref */
 			0x0, /* list color ref */
@@ -699,6 +699,7 @@ resource rIcon (kIconSource) {
 };
 
 
+#if 0
 type rAlertString {
 
 	switch {
@@ -734,7 +735,6 @@ type rAlertString {
 	string = $"00";
 };
 
-#define kGopherHeadIcon 100
 
 resource rAlertString(1) {
 
@@ -742,11 +742,12 @@ resource rAlertString(1) {
 	iconCustom { kGopherHeadIcon, 21, 38},
 	"~Gopher 1.0~^#0"
 };
-
+#endif
 
 
 ////
 
+#define kGopherHeadIcon 100
 
 resource rIcon(kGopherHeadIcon) {
 	$8000, // type
@@ -1176,3 +1177,7 @@ resource rIcon(kAboutIcon) {
 	$"000000000fff00000000000000000fffff00000000"
 
 };
+
+
+
+read rFont(32732) "resources/APPLE.M.08";

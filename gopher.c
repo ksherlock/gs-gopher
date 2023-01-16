@@ -200,15 +200,61 @@ static Pointer GetIcon(unsigned ix) {
 }
 
 Handle SystemFont;
-Handle MonacoFont;
+Handle FixedFont;
+
+// apple m 08, 8-pt
+#define FixedFontID 32732
+#define FixedFontSize 8
+
+
+// should also calculate width of 80-column text.
+
+Handle LoadFixedFont(void) {
+	Handle h;
+
+	FontID FF = {
+		{ FixedFontID, 0, FixedFontSize}
+	};
+	FontStatRec fsr;
+
+
+	FindFontStats(FF, 0, 1, &fsr);
+	if (_toolErr || (fsr.resultStats & notFoundBit)) {
+		Handle h;
+		Handle h2;
+		unsigned char *ptr;
+		unsigned long size;
+
+		h = LoadResource(rFont, FixedFontID);
+		if (_toolErr) return NULL;
+		// DetachResource(rFont, FixedFontID);
+
+		HLock(h);
+		ptr = *(unsigned char **)h;
+		AddFamily(FixedFontID, ptr);
+		size = GetHandleSize(h) - 1 - *ptr; // skip pascal name
+
+		h2 = NewHandle(size, MyID, attrNoSpec, 0);
+		PtrToHand(ptr + *ptr + 1, h2, size);
+		HUnlock(h);
+		ReleaseResource(-1, rFont, FixedFontID);
+		AddFontVar((FontHndl)h2, 0);
+		return h2;
+	}
+
+	InstallFont(FF, 0);
+	if (_toolErr) return NULL;
+
+	return (Handle)GetFont();
+}
 
 static void Setup(void) {
 
 	Handle h;
 	/* menu bars */
 
-	FontID Monaco = {
-		{ monaco, 0, 9}
+	FontID FF = {
+		{ FixedFontID, 0, FixedFontSize}
 	};
 	FontStatRec fsr;
 
@@ -248,30 +294,9 @@ static void Setup(void) {
 	AcceptRequests(ReqName, MyID, &HandleRequest);
 
 
-
-
-	// extern pascal void InstallFontL(LongWord, Word) inline(0x0E1B,dispatcher);
-
 	/* Get a handle to 9ptr monaco for fixed-width text */
 	SystemFont = (Handle)GetFont();
-	InstallFont(Monaco, 0);
-	if (!_toolErr) {
-		unsigned long size;
-
-		FindFontStats(Monaco, 0, 1, &fsr);
-		if (_toolErr) goto ff;
-		if (fsr.resultStats & (notFoundBit|unrealBit)) goto ff;
-
-		h = (Handle)GetFont();
-		size = GetHandleSize(h);
-		MonacoFont = NewHandle(size, MyID, attrNoSpec, 0);
-		if (_toolErr) {
-			MonacoFont = 0;
-			goto ff;
-		}
-		HandToHand(h, MonacoFont, size);
-	}
-ff:
+	FixedFont = LoadFixedFont();
 	SetFont((FontHndl)SystemFont);
 }
 
@@ -591,7 +616,7 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	static TEStyle style = {
 		// 0x09000004, // font id
-		{ monaco, 0, 9},
+		{ FixedFontID, 0, FixedFontSize},
 		0x0000, 0xffff, // fore gound, back ground
 		0x0000 // user data
 	};
@@ -627,12 +652,6 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	};
 
-#if 0
-	static FontID Monaco = {
-		{ monaco, 0, 9}
-	};
-#endif
-
 	void *iconPtr = nil;
 	unsigned width = rectPtr->h2 - rectPtr->h1 - 32;
 
@@ -666,14 +685,10 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	}
 #endif
 
-#if 0
-	SetFontID(Monaco);
-	SetTextSize(9);
-	SetTextFace(0);
-#endif
-	if (MonacoFont) SetFont((FontHndl)MonacoFont);
+
+	if (FixedFont) SetFont((FontHndl)FixedFont);
 	DrawStringWidth(dswNoCondense | dswTruncRight | dswPString | dswStrIsPtr, (Ref)entry->name, width);
-	if (MonacoFont) SetFont((FontHndl)SystemFont);
+	if (FixedFont) SetFont((FontHndl)SystemFont);
 
 #if 0
 	if (memFlags & memDisabled) {
