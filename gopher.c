@@ -64,6 +64,105 @@ void NetworkUpdate(unsigned up) {
 	}
 }
 
+// todo -- update for DAs.
+// todo -- copy should only be active if there's a text selection or list selection.
+
+void MenuUpdate(int type) {
+
+	switch(type) {
+	case 0:
+		// front window invalid
+		DisableMItem(kSaveItem);
+		DisableMItem(kCloseItem);
+		DisableMItem(kPageSetupItem);
+		DisableMItem(kPrintItem);
+
+		DisableMItem(kUndoItem);
+		DisableMItem(kCutItem);
+		DisableMItem(kCopyItem);
+		DisableMItem(kPasteItem);
+		DisableMItem(kClearItem);
+		DisableMItem(kSelectAllItem);
+		DisableMItem(kWrapTextItem);
+		SetMItemMark(0, kWrapTextItem);
+
+		DisableMItem(kAddBookmarkItem);
+
+
+		break;
+	case 1:
+		// front window index
+		DisableMItem(kSaveItem);
+		EnableMItem(kCloseItem);
+		DisableMItem(kPageSetupItem);
+		DisableMItem(kPrintItem);
+
+		DisableMItem(kUndoItem);
+		DisableMItem(kCutItem);
+		EnableMItem(kCopyItem);
+		DisableMItem(kPasteItem);
+		DisableMItem(kClearItem);
+		DisableMItem(kSelectAllItem);
+		DisableMItem(kWrapTextItem);
+		SetMItemMark(0, kWrapTextItem);
+
+		EnableMItem(kAddBookmarkItem);
+
+		break;
+	case 2:
+		// front window text.
+		EnableMItem(kSaveItem);
+		EnableMItem(kCloseItem);
+		EnableMItem(kPageSetupItem);
+		EnableMItem(kPrintItem);
+
+		DisableMItem(kUndoItem);
+		DisableMItem(kCutItem);
+		EnableMItem(kCopyItem);
+		DisableMItem(kPasteItem);
+		DisableMItem(kClearItem);
+		EnableMItem(kSelectAllItem);
+		EnableMItem(kWrapTextItem);
+		// todo -- SetMItemMark()
+
+		EnableMItem(kAddBookmarkItem);
+
+		break;
+	}
+}
+
+void WindowChange(void) {
+
+	static GrafPortPtr PrevWin = (GrafPortPtr)-1;
+
+	struct cookie *c;
+	GrafPortPtr win = FrontWindow();
+	if (win == PrevWin) return;
+	PrevWin = win;
+
+	if (!win) {
+		MenuUpdate(0);
+	}
+
+	if (GetSysWFlag(win)) {
+		// DA window.
+		return;
+	}
+
+	c = (struct cookie *)GetWRefCon(win);
+	if (!c) {
+		MenuUpdate(0);
+		return;
+	}
+
+	if (c->type == kGopherTypeIndex) {
+		MenuUpdate(1);
+	} else {
+		MenuUpdate(2);
+	}
+}
+
+
 #pragma databank 1
 #pragma toolparms 1
 pascal word HandleRequest(word request, longword dataIn, longword dataOut) {
@@ -894,6 +993,7 @@ void EventLoop(void) {
 			break;
 
 		}
+		WindowChange();
 	}
 }
 

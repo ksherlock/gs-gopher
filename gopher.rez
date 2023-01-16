@@ -53,7 +53,9 @@ resource rMenuBar (kMenuBarID) {
 		kAppleMID,
 		kFileMID,
 		kEditMID,
-		kNetworkMID
+		kNetworkMID,
+		kBookmarkMID,
+		kWindowMID
 	};
 };
 
@@ -89,7 +91,8 @@ resource rMenu (kEditMID, nocrossbank){
         kCopyItem,
         kPasteItem,
         kClearItem,
-        kSelectAllItem
+        kSelectAllItem,
+        kWrapTextItem
     };
 };
 
@@ -101,6 +104,23 @@ resource rMenu (kNetworkMID, nocrossbank){
 		kConnectItem,
 		kDisconnectItem,
 		kNetworkStatusItem
+	};
+};
+
+resource rMenu (kBookmarkMID, nocrossbank){
+	kBookmarkMID,
+	0xA008,
+	kBookmarkMID,
+	{
+		kAddBookmarkItem
+	};
+};
+
+resource rMenu (kWindowMID, nocrossbank){
+	kWindowMID,
+	0xA008,
+	kWindowMID,
+	{
 	};
 };
 
@@ -160,6 +180,14 @@ resource rMenuItem (kSelectAllItem, nocrossbank){
     kSelectAllItem
 };
 
+resource rMenuItem (kWrapTextItem, nocrossbank){
+    kWrapTextItem,
+    "",
+    "",
+    0,
+    0x8000,
+    kWrapTextItem
+};
 
 resource rMenuItem (kAbout, nocrossbank){
 	kAbout,
@@ -271,10 +299,24 @@ resource rMenuItem (kNetworkStatusItem, nocrossbank)
 };
 
 
+resource rMenuItem (kAddBookmarkItem, nocrossbank)
+{
+    kAddBookmarkItem,
+    "D",
+    "d",
+    0,
+    0x8000,
+    kAddBookmarkItem
+};
+
+
+
 resource rPString (kAppleMID, nocrossbank){"@"};
 resource rPString (kFileMID, nocrossbank){"  File  "};
 resource rPString (kEditMID, nocrossbank){"  Edit  "};
 resource rPString (kNetworkMID, nocrossbank){"  Network  "};
+resource rPString (kBookmarkMID, nocrossbank){"  Bookmark  "};
+resource rPString (kWindowMID, nocrossbank){"  Window  "};
 
 
 resource rPString (kAbout, nocrossbank){"About..."};
@@ -293,11 +335,14 @@ resource rPString (kCopyItem, nocrossbank){"Copy"};
 resource rPString (kPasteItem, nocrossbank){"Paste"};
 resource rPString (kClearItem, nocrossbank){"Clear"};
 resource rPString (kSelectAllItem, nocrossbank){"Select All"};
+resource rPString (kWrapTextItem, nocrossbank){"Wrap Text"};
 
 
 resource rPString (kConnectItem, nocrossbank){"Connect"};
 resource rPString (kDisconnectItem, nocrossbank){"Disconnect"};
 resource rPString (kNetworkStatusItem, nocrossbank){"Status..."};
+
+resource rPString (kAddBookmarkItem, nocrossbank){"Add Bookmark..."};
 
 
 /*

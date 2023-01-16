@@ -2,6 +2,8 @@
 #define	kFileMID    	2
 #define	kEditMID     	3
 #define kNetworkMID		4
+#define kBookmarkMID	5
+#define kWindowMID		6
 
 #define	kUndoItem   	250
 #define	kCutItem    	251
@@ -14,6 +16,8 @@
 #define FileBase	0x2000
 #define EditBase	0x3000
 #define NetworkBase 0x4000
+#define BookmarkBase 0x5000
+#define WindowBase	0x6000
 
 
 #define	kAbout		AppleBase+0
@@ -27,10 +31,13 @@
 #define	kQuitItem	FileBase+5
 
 #define kSelectAllItem EditBase+0
+#define kWrapTextItem EditBase+1
 
 #define kConnectItem NetworkBase+0
 #define kDisconnectItem NetworkBase+1
 #define kNetworkStatusItem NetworkBase+2
+
+#define kAddBookmarkItem BookmarkBase+0
 
 #define	kStartStopID  	1
 #define	kMenuBarID	1
