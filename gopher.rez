@@ -349,8 +349,11 @@ resource rPString (kAddBookmarkItem, nocrossbank){"Add Bookmark..."};
  gopher window
 */
 
-#define WindowWidth 560
-#define WindowHeight 150 
+
+// currently, for the list manager, height must be 10 * x
+
+#define IndexWindowWidth (632-8)
+#define IndexWindowHeight (189-29)
 
 resource rWindParam1 (kIndexWindow) {
 	// visibility toggled after
@@ -366,7 +369,8 @@ resource rWindParam1 (kIndexWindow) {
 	{0, 0},
 	0,
 	0,
-	{40, 40, 190, 600}, /* wPosition */
+	// {40, 40, 190, 600}, /* wPosition */
+	{29, 8, 189, 632}, /* wPosition */
 	infront,
 	kGopherIndex, /* rControlList */
 	(refIsResource << 10) + /* color table */
@@ -375,6 +379,9 @@ resource rWindParam1 (kIndexWindow) {
 };
 
 
+
+#define TextWindowWidth (632-8)
+#define TextWindowHeight (196-29)
 resource rWindParam1 (kTextWindow) {
 	fTitle + fMove + fClose + fVis,
 	kTextWindow, /* title id */
@@ -388,7 +395,7 @@ resource rWindParam1 (kTextWindow) {
 	{0, 0},
 	0,
 	0, /* info height */
-	{40, 40, 190, 600}, /* wPosition */
+	{29, 8, 196, 632}, /* wPosition */
 	infront,
 	kGopherText, /* rControlList */
 	(refIsResource << 10) + /* color table */
@@ -418,6 +425,24 @@ resource rWindParam1 (kURLWindow) {
 	singleResource /* control descriptor */
 };
 
+resource rWindParam1 (kURLWindowShadow) {
+	fVis + fFlex,
+	0, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	0, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{50+1, 40+2, 70+1, 600+2}, /* wPosition */
+	infront,
+	0, /* rControlList */
+	0
+};
 
 resource rPString (kIndexWindow, nocrossbank){" Gopher "};
 resource rPString (kTextWindow, nocrossbank){" Gopher "};
@@ -481,7 +506,7 @@ resource rControlTemplate (kGopherURL) {
 
 resource rControlTemplate (kGopherIndex) {
 	kGopherIndex,
-	{-1, -2, WindowHeight - 1, WindowWidth-22 },
+	{-1, -2, IndexWindowHeight - 1, IndexWindowWidth-22 },
 	ListControl {
 		 {	/* optional Fields */
 			testMemNever, /* flags */
@@ -502,7 +527,7 @@ resource rControlTemplate (kGopherIndex) {
 
 resource rControlTemplate (kGopherText) {
 	kGopherText,
-	{-1, -2, 190, 601 },
+	{-1, -2, TextWindowHeight - 1, TextWindowWidth+1 },
 	editTextControl {
 		 {	/* optional Fields */
 			0x0, /* flags */

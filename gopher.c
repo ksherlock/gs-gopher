@@ -428,6 +428,7 @@ void DoOpen(void) {
 
 	if (window_count >= 10) return;
 
+	GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindowShadow, rWindParam1);
 	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindow, rWindParam1);
 
 	ctrlH = GetCtlHandleFromID(win, kGopherURL);
@@ -480,6 +481,7 @@ void DoOpen(void) {
 			ProcessQueue();
 		}
 	}
+	CloseWindow(shadow);
 	CloseWindow(win); // or just hide so url is retained?
 	InitCursor(); /* reset possible I-beam cursor */
 }

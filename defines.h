@@ -46,6 +46,7 @@
 #define kIndexWindow 0x0100
 #define kTextWindow	0x0200
 #define kURLWindow 0x0300
+#define kURLWindowShadow 0x0301
 #define kPrefsWindow 0x0400
 #define kNetworkWindow 0x0500
 #define kAboutWindow 0x0600
