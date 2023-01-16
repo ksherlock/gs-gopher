@@ -17,6 +17,7 @@
 #include <quickdraw.h>
 #include <resources.h>
 #include <scrap.h>
+#include <stdfile.h>
 #include <tcpip.h>
 #include <textedit.h>
 #include <window.h>
@@ -459,6 +460,91 @@ void DoOpen(void) {
 }
 
 
+void DoSave(void) {
+	/* For a text window, save to a file... */
+
+	Handle teH;
+	SFReplyRec2 sr;
+
+	GrafPortPtr win = FrontWindow();
+	if (!win) return;
+
+	if (GetSysWFlag(win)) return;
+
+	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+
+	if (_toolErr || !teH) return;
+
+
+	memset(&sr, 0, sizeof(sr));
+	sr.nameRefDesc = refIsNewHandle;
+	sr.pathRefDesc = refIsNewHandle;
+
+	// todo -- create default file name from the selector.
+	SFPutFile2(170, 35, 0, (Ref)"\pSave file as:", 0, (Ref)"\x09\x00text.file", &sr);
+
+
+	if (sr.good) {
+		static NameRecGS destroyDCB = { 1, NULL };
+		static CreateRecGS createDCB = { 4, NULL, 0xe3, 0x04, 0x00 };
+		static OpenRecGS openDCB = { 4, 0, NULL, writeEnable, 0 };
+		static RefNumRecGS closeDCB = { 1, 0 };
+		static IORecGS ioDCB = { 4, 0, NULL, 0, 0 };
+
+		Handle h;
+		Handle textH = 0;
+		GSString255 *name;
+		word error = 0;
+
+		WaitCursor();
+
+		/*
+		TEGetText normally returns the full text size;
+		bufferDesc | 0x20 will return only the selected text.
+		*/ 
+		ioDCB.requestCount = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
+		HLock(textH);
+		ioDCB.dataBuffer = *(void **)textH;
+
+		h = (Handle)sr.pathRef;
+		HLock(h);
+		name = &(*(ResultBuf255 **)h)->bufString;
+		destroyDCB.pathname = name;
+		createDCB.pathname = name;
+		openDCB.pathname = name;
+
+		DestroyGS(&destroyDCB);
+		CreateGS(&createDCB);
+		if (_toolErr) {
+			error = _toolErr;
+			goto fini;
+		}
+
+		OpenGS(&openDCB);
+		if (_toolErr) {
+			error = _toolErr;
+			goto fini;
+		}
+		closeDCB.refNum = openDCB.refNum;
+		ioDCB.refNum = openDCB.refNum;
+
+		WriteGS(&ioDCB);
+		if (_toolErr) error = _toolErr;
+		CloseGS(&closeDCB);
+
+fini:
+		DisposeHandle(textH);
+		DisposeHandle((Handle)sr.nameRef);
+		DisposeHandle((Handle)sr.pathRef);
+		InitCursor();
+
+		if (error) {
+			ErrorWindow(0, NULL, error);
+		}
+	}
+
+}
+
 #define kPageUp 't'
 #define kPageDown 'y'
 #define kHome 's'
@@ -785,6 +871,10 @@ void DoMenu(void) {
 			break;
 		case kQuitItem:
 			Quit = 1;
+			break;
+
+		case kSaveItem:
+			DoSave();
 			break;
 
 		case kConnectItem:
