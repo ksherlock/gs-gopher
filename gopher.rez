@@ -444,6 +444,92 @@ resource rWindParam1 (kURLWindowShadow) {
 	0
 };
 
+
+#define SearchWindowWidth (600-40)
+resource rWindParam1 (kSearchWindow) {
+	/*fAlert + */ fVis + fFlex,
+	0, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	kURLWindow, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{50, 40, 90, 600}, /* wPosition */
+	infront,
+	kSearchWindow, /* rControlList */
+	(refIsResource << 10) + /* color table */
+	(refIsPtr << 8) + /* title */ 
+	ResourceToResource /* control descriptor */
+};
+
+resource rWindParam1 (kSearchWindowShadow) {
+	fVis + fFlex,
+	0, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	0, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{50+1, 40+2, 90+1, 600+2}, /* wPosition */
+	infront,
+	0, /* rControlList */
+	0
+};
+
+resource rControlList(kSearchWindow) {
+	{
+		kSearchText,
+		kSearchLineEdit
+	}
+};
+
+resource rControlTemplate (kSearchText) {
+	0x3,
+	{5, 10, 15, SearchWindowWidth - 10},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kSearchText,
+			0,
+			leftJust
+		}
+	}
+};
+
+resource rTextForLETextBox2 (kSearchText) {
+	"Search..."
+};
+
+resource rControlTemplate (kSearchLineEdit) {
+	kSearchLineEdit,
+	{ 21, -2, 41, SearchWindowWidth + 2 },
+	editLineControl {
+		 {	/* optional Fields */
+			0x0, /* flags */
+			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr, /* more flags */
+			0x0, /* ref con */
+			255, /* max size */
+			0, /* default text */
+			-1 /* password char (not a password field) */
+			//0 /* leKeyIsNonControl */ /* classify key filter */
+		}
+	}
+};
+
+
+
 resource rPString (kIndexWindow, nocrossbank){" Gopher "};
 resource rPString (kTextWindow, nocrossbank){" Gopher "};
 
@@ -484,7 +570,7 @@ resource rWindColor (kURLWindow) {
 resource rControlTemplate (kGopherURL) {
 	kGopherURL,
 	// {3, 4, 17, 556 },
-	{ -1, -1, 21, 561 },
+	{ -1, -2, 21, 560+2 },
 	editLineControl {
 		 {	/* optional Fields */
 			0x0, /* flags */
@@ -547,11 +633,6 @@ resource rControlTemplate (kGopherText) {
 	}
 };
 
-#if 0
-resource rStyleBlock (kGopherText) {
-
-}
-#endif
 
 /* Some of the GetSysIcons have incorrect masks */
 

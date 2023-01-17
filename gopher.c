@@ -487,6 +487,79 @@ void DoOpen(void) {
 }
 
 
+void DoSearch(ListEntry *e) {
+
+	static char text[256];
+	// static URLComponents uc;
+
+	CtlRecHndl ctrlH;
+	LERecHndl leH;
+	unsigned ok;
+
+
+	if (window_count >= 10) return;
+
+	GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindowShadow, rWindParam1);
+	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindow, rWindParam1);
+
+	ctrlH = GetCtlHandleFromID(win, kSearchLineEdit);
+	leH = (LERecHndl)GetCtlTitle(ctrlH);
+
+	// todo -- set the text to the description?
+
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
+		// DoModalWindow(&event, NULL, (VoidProcPtr)0x80000000, (VoidProcPtr)-1, flags);
+		DoModalWindow(&event, NULL, (VoidProcPtr)OpenEventHook, (VoidProcPtr)-1, flags);
+		#undef flags
+		// break on return, esc (apple-. converted to esc)
+
+		if (event.what == app4Evt) {
+
+			unsigned quit = 0;
+			switch((unsigned)event.message) {
+				case kOpenAppleA:
+					// select-all
+					LESetSelect(0, 256, leH);
+					break;
+				case kOpenControlA:
+					LESetSelect(0, 0, leH);
+					break;
+				case kOpenControlE:
+					LESetSelect(256, 256, leH);
+					break;
+				case kOpenEscape:
+					quit = 1;
+					break;
+				case kOpenReturn:
+					GetLETextByID(win, kSearchLineEdit, (StringPtr)text);
+					quit = 1;
+					// todo -- queue up the search
+					break;
+#if 0
+					ok = QueueURL(text + 1, text[0]);
+					if (ok) {
+						quit = 1;
+						break;
+					}
+					SysBeep2(sbBadInputValue);
+#endif
+					break;
+
+			}
+			if (quit) break;
+		}
+
+		if (event.what == nullEvt) {
+			ProcessQueue();
+		}
+	}
+	CloseWindow(shadow);
+	CloseWindow(win); // or just hide so url is retained?
+	InitCursor(); /* reset possible I-beam cursor */
+}
+
+
 void DoSave(void) {
 	/* For a text window, save to a file... */
 
@@ -941,17 +1014,16 @@ void DoMenu(void) {
 	}
 }
 
-void OpenIndex(ListCtlRec *rec) {
-	ListEntry *e = (ListEntry *)rec->ctlList;
-	unsigned count = rec->ctlData >> 16;
+void OpenIndex(ListCtlRec *list) {
+	ListEntry *e = SelectedIndex(list);
+	if (!e) return;
 
-	unsigned i;
+	// todo -- if binary file, SFPutFile2 and open for writing.
 
-	for (i = 0; i < count; ++i, ++e) {
-		if (e->flags & memSelected) {
-			QueueEntry(e);
-			break;
-		}
+	if (e->type == kGopherTypeSearch) {
+		DoSearch(e);
+	} else {
+		QueueEntry(e);
 	}
 }
 

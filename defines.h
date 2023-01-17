@@ -51,6 +51,13 @@
 #define kNetworkWindow 0x0500
 #define kAboutWindow 0x0600
 
+#define kSearchWindow 0x0700
+#define kSearchWindowShadow 0x0701
+
+#define kSearchText kSearchWindow+1
+#define kSearchLineEdit kSearchWindow+2
+
+
 #define kGopherURL kURLWindow+1
 #define kGopherIndex kIndexWindow+1
 #define kGopherText kTextWindow+1
