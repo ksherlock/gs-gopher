@@ -73,3 +73,4 @@
 #define kIconSource 4
 #define kIconFolder 5
 #define kIconFolderOpen 6
+#define kIconSearch 7

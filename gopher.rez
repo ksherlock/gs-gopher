@@ -805,6 +805,31 @@ resource rIcon (kIconSource) {
 };
 
 
+// magnifying glass
+resource rIcon (kIconSearch) {
+	0x0, // type
+	8, 12,
+	$"fffffc003fff"
+	$"ffffc0ff03ff"
+	$"ffff0ffff0ff"
+	$"ffff0ffff0ff"
+	$"ffffc0ff03ff"
+	$"ffff0c003fff"
+	$"fff0ffffffff"
+	$"ff0fffffffff",
+
+	$"00000ffff000"
+	$"0000ff00ff00"
+	$"0000f0000f00"
+	$"0000f0000f00"
+	$"0000ff00ff00"
+	$"0000fffff000"
+	$"000f00000000"
+	$"00f000000000"
+};
+
+
+
 #if 0
 type rAlertString {
 

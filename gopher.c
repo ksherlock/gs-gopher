@@ -281,6 +281,7 @@ static void Setup(void) {
 	Icons[1] = (Pointer)GetIcon(kIconFolder); // folder
 	Icons[2] = (Pointer)GetIcon(kIconBinary); // binary.
 	Icons[3] = (Pointer)GetIcon(kIconDocument); // document
+	Icons[4] = (Pointer)GetIcon(kIconSearch);
 
 
 	window_active = 0;
@@ -305,6 +306,7 @@ Pointer IconForType(unsigned type) {
 		case '0': return Icons[0]; /* text */
 		case '1': return Icons[1]; /* directory/index */
 		case '9': return Icons[2]; /* binary */
+		case '7': return Icons[4];
 		case 'i': /* informational */
 		case '3': /* error */
 			return NULL;
@@ -739,7 +741,7 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 
 	iconPtr = IconForType(entry->type);
 	if (iconPtr)
-		DrawIcon(iconPtr, 0, rectPtr->h1 + 2, rectPtr->v1 + 2);
+		DrawIcon(iconPtr, 0, rectPtr->h1 + 2, rectPtr->v1 + 1);
 
 	SetForeColor(0x0000);
 	SetTextMode(0);
