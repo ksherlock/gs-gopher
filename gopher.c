@@ -53,6 +53,36 @@ pascal void WindowDrawControls(void) {
 #pragma toolparms 0
 #pragma databank 0
 
+
+GrafPortPtr CreateShadowWindow(GrafPortPtr parent) {
+
+	static ParamList p = {
+		sizeof(ParamList), // paramLength
+		fVis, // frameBits
+	};
+
+	RegionHndl rh;
+
+	WindRec *wp = (WindRec *)parent;
+	rh = wp->wContRgn;
+
+	p.wPosition = (**rh).rgnBBox; 
+	p.wPosition.h1 += 2;
+	p.wPosition.h2 += 2;
+	p.wPosition.v1 += 1;
+	p.wPosition.v2 += 1;
+
+	if (wp->wFrame & fAlert) {
+		p.wPosition.h1 -= 10;
+		p.wPosition.h2 += 10;
+		p.wPosition.v1 -= 4;
+		p.wPosition.v2 += 4;
+	}
+
+	p.wPlane = parent;
+	return NewWindow(&p);
+}
+
 void NetworkUpdate(unsigned up) {
 	if (up) {
 		EnableMItem(kOpenItem);
@@ -398,10 +428,12 @@ void DoAbout(void) {
 	AlertWindow(refIsResource << 1, NULL, 1);
 #else
 	GrafPortPtr win;
+	GrafPortPtr shadow;
 	long id;
 
 	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kAboutWindow, rWindParam1);
 
+	shadow = CreateShadowWindow(win);
 	for(;;) {
 		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
 		id = DoModalWindow(&event, NULL, NULL, (VoidProcPtr)-1, flags);
@@ -412,6 +444,7 @@ void DoAbout(void) {
 		ProcessQueue();
 	}
 
+	CloseWindow(shadow);
 	CloseWindow(win);
 	InitCursor();
 #endif
@@ -430,8 +463,10 @@ void DoOpen(void) {
 
 	if (window_count >= 10) return;
 
-	GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindowShadow, rWindParam1);
+	// GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindowShadow, rWindParam1);
 	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindow, rWindParam1);
+
+	GrafPortPtr shadow = CreateShadowWindow(win);
 
 	ctrlH = GetCtlHandleFromID(win, kGopherURL);
 	leH = (LERecHndl)GetCtlTitle(ctrlH);
@@ -501,8 +536,10 @@ void DoSearch(ListEntry *e) {
 
 	if (window_count >= 10) return;
 
-	GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindowShadow, rWindParam1);
+	// GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindowShadow, rWindParam1);
 	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindow, rWindParam1);
+
+	GrafPortPtr shadow = CreateShadowWindow(win);
 
 	ctrlH = GetCtlHandleFromID(win, kSearchLineEdit);
 	leH = (LERecHndl)GetCtlTitle(ctrlH);
