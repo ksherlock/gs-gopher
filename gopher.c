@@ -533,17 +533,8 @@ void DoSearch(ListEntry *e) {
 					break;
 				case kOpenReturn:
 					GetLETextByID(win, kSearchLineEdit, (StringPtr)text);
+					QueueEntry(e, text);
 					quit = 1;
-					// todo -- queue up the search
-					break;
-#if 0
-					ok = QueueURL(text + 1, text[0]);
-					if (ok) {
-						quit = 1;
-						break;
-					}
-					SysBeep2(sbBadInputValue);
-#endif
 					break;
 
 			}
@@ -1023,7 +1014,7 @@ void OpenIndex(ListCtlRec *list) {
 	if (e->type == kGopherTypeSearch) {
 		DoSearch(e);
 	} else {
-		QueueEntry(e);
+		QueueEntry(e, NULL);
 	}
 }
 

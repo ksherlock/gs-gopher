@@ -35,6 +35,7 @@ typedef struct DownloadItem {
 	dnrBuffer dnr;
 	char *host;
 	char *selector;
+	char *query;
 	unsigned long tick;
 
 
@@ -264,9 +265,18 @@ static unsigned OneItem(DownloadItem *item) {
 		case kStateConnecting:
 			if (sr.srState == TCPSESTABLISHED) {
 				unsigned char *selector = item->selector;
+				unsigned char *query = item->query;
 				item->state = kStateReading;
 				if (selector)
 					err = TCPIPWriteTCP(ipid, selector+1, selector[0], 0, 0);
+				if (query) {
+					/*
+						The client sends the server the selector string, a tab, and the search string (words to search for).
+						If the selector string is empty, the client merely sends the search string.
+					*/
+					if (selector) TCPIPWriteTCP(ipid, "\t", 1, 0, 0);
+					err = TCPIPWriteTCP(ipid, query+1, query[0], 0, 0);
+				}
 				err = TCPIPWriteTCP(ipid, "\r\n", 2, 1, 0);
 				item->state = kStateReading;
 			}
@@ -497,7 +507,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 }
 
 
-unsigned QueueEntry(struct ListEntry *e) {
+unsigned QueueEntry(struct ListEntry *e, const char *query) {
 
 	unsigned extra;
 	unsigned i;
@@ -520,7 +530,13 @@ unsigned QueueEntry(struct ListEntry *e) {
 
 	extra = e->host[0];
 	if (e->selector) extra += e->selector[0];
-	extra += 2;
+
+	if (query && *query) {
+		// query is sent as a selector + tab + query string.
+		extra += *query;
+	}
+
+	extra += 3; // pstrings
 
 	p = malloc(extra);
 	if (!p) return 0;
@@ -534,6 +550,12 @@ unsigned QueueEntry(struct ListEntry *e) {
 		item->selector = p;
 		i = e->selector[0] + 1;
 		memcpy(p, e->selector, i);
+	}
+	if (query && *query) {
+		p += i;
+		item->query = p;
+		i = *query + 1;
+		memcpy(p, query, i);
 	}
 
 	BeginQueue(item);
@@ -750,10 +772,14 @@ void DownloadComplete(DownloadItem *item) {
 
 	switch(item->type) {
 	case kGopherTypeIndex:
+	case kGopherTypeSearch:
 		IndexComplete(item);
 		break;
 	case kGopherTypeText:
 		TextComplete(item);
+		break;
+	default:
+		// TODO
 		break;
 	}
 }

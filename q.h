@@ -6,6 +6,6 @@ void ShutDownQueue(void);
 void CancelQueue(void);
 void ProcessQueue(void);
 unsigned QueueURL(const char *cp, unsigned length);
-unsigned QueueEntry(struct ListEntry *e);
+unsigned QueueEntry(struct ListEntry *e, const char *query);
 
 #endif
