@@ -570,7 +570,7 @@ unsigned OneLine(char *ptr, ListEntry *e){
 		if (c < ' ') break;
 	}
 	ptr[j] = i - j - 1;
-	if (c == '\r') return i;
+	if (c == '\r') return i+1;
 
 	j = i;
 	e->selector = ptr + i;
@@ -581,7 +581,7 @@ unsigned OneLine(char *ptr, ListEntry *e){
 		if (c < ' ') break;
 	}
 	ptr[j] = i - j - 1;
-	if (c == '\r') return i;
+	if (c == '\r') return i+1;
 
 
 	j = i;
@@ -593,7 +593,7 @@ unsigned OneLine(char *ptr, ListEntry *e){
 		if (c < ' ') break;
 	}
 	ptr[j] = i - j - 1;
-	if (c == '\r') return i;
+	if (c == '\r') return i+1;
 
 
 	port = 0;
