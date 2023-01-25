@@ -353,7 +353,7 @@ resource rPString (kAddBookmarkItem, nocrossbank){"Add Bookmark..."};
 // currently, for the list manager, height must be 10 * x
 
 #define IndexWindowWidth (632-8)
-#define IndexWindowHeight (189-29)
+#define IndexWindowHeight (194-29)
 
 resource rWindParam1 (kIndexWindow) {
 	// visibility toggled after
@@ -370,7 +370,7 @@ resource rWindParam1 (kIndexWindow) {
 	0,
 	0,
 	// {40, 40, 190, 600}, /* wPosition */
-	{29, 8, 189, 632}, /* wPosition */
+	{29, 8, 194, 632}, /* wPosition */
 	infront,
 	kGopherIndex, /* rControlList */
 	(refIsResource << 10) + /* color table */
@@ -602,7 +602,7 @@ resource rControlTemplate (kGopherIndex) {
 			0, /* list view -- height*/
 			fListSelect, /* list type */
 			1, /* list start */
-			10, /* list mem height */
+			11, /* list mem height */
 			0, /* list mem size */
 			0x0, /* list ref */
 			0x0, /* list color ref */
@@ -1311,4 +1311,4 @@ resource rIcon(kAboutIcon) {
 
 
 
-read rFont(32732) "resources/APPLE.M.08";
+read rFont(1) "resources/mc.font";

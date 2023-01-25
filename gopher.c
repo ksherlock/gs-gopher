@@ -233,61 +233,133 @@ Handle SystemFont;
 Handle FixedFont;
 
 // apple m 08, 8-pt
-#define FixedFontID 32732
-#define FixedFontSize 8
+// #define FixedFontID 32732
+// #define FixedFontSize 8
+
+FontID FixedFontID = { { monaco, 0, 9 } };
+
+TEStyle FixedStyle = {
+	// 0x09000004, // font id
+	{ monaco, 0, 9}, // font
+	0x0000, 0xffff, // fore gound, back ground
+	0x0000 // user data
+};
+
+// monaco 9
+word FixedCharWidth = 6;
+word FixedCharHeight = 11;
+
+
+struct TEPixelRuler {
+   Word leftMargin;
+   Word leftIndent;
+   Word rightMargin;
+   Word just;
+   Word extraLS;
+   Word flags;
+   LongWord userData;
+   Word tabType;
+   Word tabTerminator;
+} FixedRuler = {
+	0, 0, 640, leftJust,
+	0, 0, 0, stdTabs, 6 * 8
+};
 
 
 // should also calculate width of 80-column text.
+#undef family // control.h
+struct FontHeader {
+	unsigned offsetToMF;
+	unsigned family;
+	unsigned style;
+	unsigned size;
+	unsigned version;
+	unsigned fbrExtent;
+};
+
+
+struct MacFontHeader {
+	unsigned fontType;
+	unsigned firstChar;
+	unsigned lastChar;
+	unsigned widMax;
+	unsigned kernMax;
+	unsigned nDescent;
+	unsigned fRectWidth;
+	unsigned fRectHeight;
+	unsigned owTLoc;
+	unsigned ascent;
+	unsigned descent;
+	unsigned leading;
+	unsigned rowWords;
+	// bitmapImage
+	// locTable
+	// owTable
+};
+
+word FindUnusedFontID(void) {
+	unsigned i;
+
+	for (i = 32768; ; ++i) {
+		word stats = GetFamInfo(i, NULL);
+		if (stats & notFoundBit) return i;
+	}
+}
 
 Handle LoadFixedFont(void) {
 	Handle h;
+	Handle h2;
+	unsigned char *ptr;
+	unsigned long size;
+	struct FontHeader *fh;
+	struct MacFontHeader *mfh;
+	int offset;
 
-	FontID FF = {
-		{ FixedFontID, 0, FixedFontSize}
-	};
-	FontStatRec fsr;
+	unsigned newFamily = FindUnusedFontID();
 
-
-	FindFontStats(FF, 0, 1, &fsr);
-	if (_toolErr || (fsr.resultStats & notFoundBit)) {
-		Handle h;
-		Handle h2;
-		unsigned char *ptr;
-		unsigned long size;
-
-		h = LoadResource(rFont, FixedFontID);
-		if (_toolErr) return NULL;
-		// DetachResource(rFont, FixedFontID);
-
-		HLock(h);
-		ptr = *(unsigned char **)h;
-		AddFamily(FixedFontID, ptr);
-		size = GetHandleSize(h) - 1 - *ptr; // skip pascal name
-
-		h2 = NewHandle(size, MyID, attrNoSpec, 0);
-		PtrToHand(ptr + *ptr + 1, h2, size);
-		HUnlock(h);
-		ReleaseResource(-1, rFont, FixedFontID);
-		AddFontVar((FontHndl)h2, 0);
-		return h2;
-	}
-
-	InstallFont(FF, 0);
+	h = LoadResource(rFont, 1);
 	if (_toolErr) return NULL;
+	// DetachResource(rFont, FixedFontID);
 
-	return (Handle)GetFont();
+	HLock(h);
+	ptr = *(unsigned char **)h;
+	offset = *ptr + 1;
+	fh = (struct FontHeader *)(ptr + offset);
+	mfh = (struct MacFontHeader *)((char *)fh + fh->offsetToMF);
+	fh->family = newFamily;
+
+	FixedFontID.fidRec.famNum = newFamily;
+	FixedFontID.fidRec.fontStyle = 0;
+	FixedFontID.fidRec.fontSize = fh->size;
+
+	FixedStyle.styleFontID.fidLong = FixedFontID.fidLong;
+
+	FixedCharHeight = mfh->fRectHeight;
+	FixedCharWidth = mfh->fRectWidth;
+
+	FixedRuler.tabTerminator = 8 * FixedCharWidth;
+
+	// fh->fbrExtent == width
+
+
+	AddFamily(newFamily, ptr); // TODO - does FontManager retain a ptr?
+	size = GetHandleSize(h) - offset; // skip pascal name
+
+	h2 = NewHandle(size, MyID, attrNoSpec, 0);
+	PtrToHand(ptr + offset, h2, size);
+	HUnlock(h);
+	ReleaseResource(-1, rFont, 1);
+	AddFontVar((FontHndl)h2, 0);
+	return h2;
 }
+
+
+
 
 static void Setup(void) {
 
 	Handle h;
 	/* menu bars */
-
-	FontID FF = {
-		{ FixedFontID, 0, FixedFontSize}
-	};
-	FontStatRec fsr;
-
 
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
 	SetMenuBar(0);
@@ -298,14 +370,6 @@ static void Setup(void) {
 
 	InitCursor();
 	StartupQueue();
-
-#if 0
-	/* icons */
-	Icons[0] = (Pointer)GetSysIcon(getFileIcon, 0x04, 0x0000); // text
-	Icons[1] = (Pointer)GetSysIcon(getFileIcon, 0x0f, 0x0000); // folder
-	Icons[2] = (Pointer)GetSysIcon(getFileIcon, 0x06, 0x0000); // binary.
-	Icons[3] = (Pointer)GetSysIcon(getFileIcon, 0xdd, 0x0000); // document
-#endif
 
 	Icons[0] = (Pointer)GetIcon(kIconText); // text
 	Icons[1] = (Pointer)GetIcon(kIconFolder); // folder
@@ -502,6 +566,8 @@ void DoOpen(void) {
 					GetLETextByID(win, kGopherURL, (StringPtr)text);
 					if (!text[0]) break;
 
+					// TODO -- should indicate if it's a binary item
+					// so we can save it to a file....
 					ok = QueueURL(text + 1, text[0]);
 					if (ok) {
 						quit = 1;
@@ -719,13 +785,6 @@ static pascal void KeyFilter(Handle teH, unsigned type) {
 
 void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
-	static TEStyle style = {
-		// 0x09000004, // font id
-		{ FixedFontID, 0, FixedFontSize},
-		0x0000, 0xffff, // fore gound, back ground
-		0x0000 // user data
-	};
-
 	GrafPortPtr win;
 	Handle teH;
 
@@ -738,7 +797,8 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	(**((TERecord **)teH)).textFlags &= ~fReadOnly;
 
-	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &style, teH);
+	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &FixedStyle, teH);
+	TESetRuler(refIsPointer, (Ref)&FixedRuler, teH);
 	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
 
 	(**((TERecord **)teH)).textFlags |= fReadOnly;
@@ -960,13 +1020,6 @@ void DoCopy(void) {
 void ToggleWrapText(void) {
 
 
-	static TEStyle style = {
-		// 0x09000004, // font id
-		{ FixedFontID, 0, FixedFontSize},
-		0x0000, 0xffff, // fore gound, back ground
-		0x0000 // user data
-	};
-
 	GrafPortPtr win = FrontWindow();
 
 
@@ -985,7 +1038,7 @@ void ToggleWrapText(void) {
 	}
 
 	// call TEStyleChange to force a re-layout.
-	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &style, teH);
+	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &FixedStyle, teH);
 
 	tr = *(TERecord **)teH;
 	tr->textFlags |= fReadOnly;
