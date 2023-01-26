@@ -22,6 +22,8 @@ enum {
 	kStateError
 };
 
+char *SearchPrompt(char *name);
+
 
 typedef struct DownloadItem {
 
@@ -399,6 +401,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	unsigned st;
 	unsigned extra;
 	char *p;
+	char *query = NULL;
 
 
 	unsigned mask;
@@ -483,8 +486,24 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	item->type = type;
 	item->port = port;
 
+	switch(type) {
+	case kGopherTypeIndex:
+	case kGopherTypeText:
+		break;
+	case kGopherTypeSearch:
+		query = SearchPrompt(NULL);
+		if (!query) return 0;
+		break;
+	default:
+		break;
+		// TODO - SFPutFile2
+	}
 
-	extra = host.length + selector.length + 2;
+
+
+	extra = host.length + selector.length;
+	if (query && *query) extra += *query;
+	extra += 3; // pstring.
 
 	p = malloc(extra);
 	if (!p) return 0;
@@ -499,7 +518,15 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		item->selector = p;
 		*p++ = selector.length;
 		memcpy(p, cp + selector.location, selector.length);
+		p += selector.length;
 	}
+	if (query && *query) {
+		int i = *query;
+		item->query = p;
+		i = *query + 1;
+		memcpy(p, query, i);
+	}
+
 
 	BeginQueue(item);
 	Active |= mask;
@@ -507,11 +534,12 @@ unsigned QueueURL(const char *cp, unsigned length) {
 }
 
 
-unsigned QueueEntry(struct ListEntry *e, const char *query) {
+unsigned QueueEntry(struct ListEntry *e) {
 
 	unsigned extra;
 	unsigned i;
 	char *p;
+	char *query = NULL;
 
 
 	unsigned mask;
@@ -527,6 +555,21 @@ unsigned QueueEntry(struct ListEntry *e, const char *query) {
 
 	item->type = e->type;
 	item->port = e->port;
+
+	switch(e->type) {
+	case kGopherTypeIndex:
+	case kGopherTypeText:
+		break;
+	case kGopherTypeSearch:
+		query = SearchPrompt(e->name);
+		if (!query) return 0;
+		break;
+	default:
+		break;
+		// TODO - SFPutFile2
+	}
+
+
 
 	extra = e->host[0];
 	if (e->selector) extra += e->selector[0];

@@ -590,17 +590,16 @@ void DoOpen(void) {
 }
 
 
-void DoSearch(ListEntry *e) {
+/*
+ * return a search string / null if canceled.
+ */
+char *SearchPrompt(char *name) {
 
 	static char text[256];
 	// static URLComponents uc;
 
 	CtlRecHndl ctrlH;
 	LERecHndl leH;
-	unsigned ok;
-
-
-	if (window_count >= 10) return;
 
 	// GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindowShadow, rWindParam1);
 	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindow, rWindParam1);
@@ -610,8 +609,15 @@ void DoSearch(ListEntry *e) {
 	ctrlH = GetCtlHandleFromID(win, kSearchLineEdit);
 	leH = (LERecHndl)GetCtlTitle(ctrlH);
 
-	// todo -- set the text to the description?
+	if (name && *name) {
+		// we can't just set the title, we also have to swap from resource to pointer and set the length.
+		CtlRecHndl ctrlH = GetCtlHandleFromID(win, kSearchText);
+		SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH);
+		SetCtlValue(*name, ctrlH);
+		SetCtlTitle(name+1, (Handle)ctrlH);
+	}
 
+	unsigned quit = 0;
 	for(;;) {
 		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
 		// DoModalWindow(&event, NULL, (VoidProcPtr)0x80000000, (VoidProcPtr)-1, flags);
@@ -621,7 +627,6 @@ void DoSearch(ListEntry *e) {
 
 		if (event.what == app4Evt) {
 
-			unsigned quit = 0;
 			switch((unsigned)event.message) {
 				case kOpenAppleA:
 					// select-all
@@ -638,10 +643,8 @@ void DoSearch(ListEntry *e) {
 					break;
 				case kOpenReturn:
 					GetLETextByID(win, kSearchLineEdit, (StringPtr)text);
-					QueueEntry(e, text);
-					quit = 1;
+					quit = 2;
 					break;
-
 			}
 			if (quit) break;
 		}
@@ -653,6 +656,70 @@ void DoSearch(ListEntry *e) {
 	CloseWindow(shadow);
 	CloseWindow(win); // or just hide so url is retained?
 	InitCursor(); /* reset possible I-beam cursor */
+
+	if (quit == 2) {
+		return text;
+	}
+	return NULL;
+}
+
+/*
+ * return a file descriptor, 0 if canceled.
+ */
+int FilePrompt(GSString255 *name, unsigned ftype, unsigned atype) {
+
+	static NameRecGS destroyDCB = { 1, NULL };
+	static CreateRecGS createDCB = { 4, NULL, 0xe3, 0x04, 0x00 };
+	static OpenRecGS openDCB = { 4, 0, NULL, writeEnable, 0 };
+
+	SFReplyRec2 sr;
+	Handle h;
+	word rv = 0;
+	word error = 0;
+
+	memset(&sr, 0, sizeof(sr));
+	sr.nameRefDesc = refIsNewHandle;
+	sr.pathRefDesc = refIsNewHandle;
+
+	if (!name) name = (GSString255 *)"\x04\x00file";
+	// todo -- create default file name from the selector.
+	SFPutFile2(170, 35, 0, (Ref)"\pSave file as:", 0, (Ref)name, &sr);
+
+	if (_toolErr || !sr.good) return 0;
+
+	createDCB.fileType = ftype;
+	createDCB.auxType = atype;
+
+	h = (Handle)sr.pathRef;
+	HLock(h);
+	name = &(*(ResultBuf255 **)h)->bufString;
+	destroyDCB.pathname = name;
+	createDCB.pathname = name;
+	openDCB.pathname = name;
+
+	DestroyGS(&destroyDCB);
+	CreateGS(&createDCB);
+	if (_toolErr) {
+		error = _toolErr;
+		goto fini;
+	}
+
+	OpenGS(&openDCB);
+	if (_toolErr) {
+		error = _toolErr;
+		goto fini;
+	}
+	rv = openDCB.refNum;
+
+
+fini:
+	DisposeHandle((Handle)sr.nameRef);
+	DisposeHandle((Handle)sr.pathRef);
+
+	if (error) {
+		ErrorWindow(0, NULL, error);
+	}
+	return rv;
 }
 
 
@@ -1101,13 +1168,7 @@ void OpenIndex(ListCtlRec *list) {
 	ListEntry *e = SelectedIndex(list);
 	if (!e) return;
 
-	// todo -- if binary file, SFPutFile2 and open for writing.
-
-	if (e->type == kGopherTypeSearch) {
-		DoSearch(e);
-	} else {
-		QueueEntry(e, NULL);
-	}
+	QueueEntry(e);
 }
 
 void DoIndexKey(GrafPortPtr win) {

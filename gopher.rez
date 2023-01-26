@@ -494,7 +494,7 @@ resource rControlList(kSearchWindow) {
 };
 
 resource rControlTemplate (kSearchText) {
-	0x3,
+	kSearchText,
 	{5, 10, 15, SearchWindowWidth - 10},
 	statTextControl {
 		 {	/* optional Fields */
