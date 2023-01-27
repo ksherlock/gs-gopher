@@ -47,15 +47,6 @@ typedef struct index_cookie {
 } index_cookie;
 
 
-#if 0
-struct menu_entry {
-	unsigned type;
-	unsigned port;
-	char *name;
-	char *host;
-	char *selector;
-};
-#endif
 
 void NewTextWindow(text_cookie *, void *, unsigned long);
 void NewIndexWindow(index_cookie *);

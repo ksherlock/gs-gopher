@@ -3,7 +3,9 @@
 #pragma noroot
 
 
+#include <gsos.h>
 #include <memory.h>
+#include <misctool.h>
 #include <tcpip.h>
 
 #include <string.h>
@@ -23,6 +25,7 @@ enum {
 };
 
 char *SearchPrompt(char *name);
+int FilePrompt(GSString255 *name, unsigned ftype, unsigned atype);
 
 
 typedef struct DownloadItem {
@@ -40,6 +43,8 @@ typedef struct DownloadItem {
 	char *query;
 	unsigned long tick;
 
+
+	unsigned refNum;
 
 	// download data
 	Handle handle;
@@ -124,11 +129,50 @@ void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error) {
 	}
 	if (item->handle) DisposeHandle(item->handle);
 	if (item->host) free(item->host);
+	if (item->refNum) {
+		// todo -- if there was an error, delete it?
+		RefNumRecGS closeDCB = { 1, item->refNum};
+		CloseGS(&closeDCB);
+	}
 	memset(item, 0, sizeof(*item));
 	item->state = new_state;
 	item->error = new_error;
 }
 
+/* read data, write to the refnum */
+static unsigned ReadData(DownloadItem *item) {
+	static char buffer[1024];
+	static rrBuff rr;
+	static srBuff sr;
+
+	static IORecGS ioDCB = { 4, 0, buffer, 0, 0 };
+
+	unsigned ipid = item->ipid;
+
+	ioDCB.refNum = item->refNum;
+
+	for(;;) {
+		unsigned i, j;
+
+		TCPIPPoll();
+		TCPIPStatusTCP(ipid, &sr);
+
+		i = sizeof(buffer);
+		if (sr.srRcvQueued == 0) break;
+		if (sr.srRcvQueued < i) i = sr.srRcvQueued;
+
+		TCPIPReadTCP(ipid, 0, (Ref)buffer, i, &rr);
+		if (!rr.rrBuffCount) break;
+
+		ioDCB.requestCount = rr.rrBuffCount;
+		WriteGS(&ioDCB);
+
+		if (_toolErr) return 0;
+
+		if (!rr.rrMoreFlag) break;
+	}
+	return 1;
+}
 
 // trailing . not handled here.
 static unsigned ReadText(DownloadItem *item) {
@@ -296,7 +340,8 @@ static unsigned OneItem(DownloadItem *item) {
 
 		case kStateReading:
 			if (sr.srRcvQueued) {
-				ok = ReadText(item);
+				if (item->refNum) ok = ReadData(item);
+				else ok = ReadText(item);
 				if (!ok) return 0;
 			}
 
@@ -402,6 +447,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	unsigned extra;
 	char *p;
 	char *query = NULL;
+	unsigned refNum = 0;
 
 
 	unsigned mask;
@@ -495,8 +541,8 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		if (!query) return 0;
 		break;
 	default:
+		refNum = FilePrompt(NULL, 0x06, 0x00);
 		break;
-		// TODO - SFPutFile2
 	}
 
 
@@ -527,6 +573,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		memcpy(p, query, i);
 	}
 
+	item->refNum = refNum;
 
 	BeginQueue(item);
 	Active |= mask;
@@ -540,6 +587,7 @@ unsigned QueueEntry(struct ListEntry *e) {
 	unsigned i;
 	char *p;
 	char *query = NULL;
+	unsigned refNum = 0;
 
 
 	unsigned mask;
@@ -565,8 +613,9 @@ unsigned QueueEntry(struct ListEntry *e) {
 		if (!query) return 0;
 		break;
 	default:
+		refNum = FilePrompt(NULL, 0x06, 0x00);
+		if (!refNum) return 0;
 		break;
-		// TODO - SFPutFile2
 	}
 
 
@@ -600,6 +649,8 @@ unsigned QueueEntry(struct ListEntry *e) {
 		i = *query + 1;
 		memcpy(p, query, i);
 	}
+
+	item->refNum = refNum;
 
 	BeginQueue(item);
 	Active |= mask;
@@ -822,7 +873,10 @@ void DownloadComplete(DownloadItem *item) {
 		TextComplete(item);
 		break;
 	default:
-		// TODO
+		#ifndef sbFileTransferred
+		#define sbFileTransferred 0x0F80
+		#endif
+		SysBeep2(sbFileTransferred);
 		break;
 	}
 }

@@ -681,7 +681,7 @@ int FilePrompt(GSString255 *name, unsigned ftype, unsigned atype) {
 	sr.nameRefDesc = refIsNewHandle;
 	sr.pathRefDesc = refIsNewHandle;
 
-	if (!name) name = (GSString255 *)"\x04\x00file";
+	if (!name) name = (GSString255 *)"\x04\x00" "file";
 	// todo -- create default file name from the selector.
 	SFPutFile2(170, 35, 0, (Ref)"\pSave file as:", 0, (Ref)name, &sr);
 
