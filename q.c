@@ -26,6 +26,7 @@ enum {
 
 char *SearchPrompt(char *name);
 int FilePrompt(GSString255 *name, unsigned ftype, unsigned atype);
+GSString255 *FileName(const char *path, word length);
 
 
 typedef struct DownloadItem {
@@ -540,9 +541,14 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		query = SearchPrompt(NULL);
 		if (!query) return 0;
 		break;
-	default:
-		refNum = FilePrompt(NULL, 0x06, 0x00);
+	default: {
+		GSString255 *name = NULL;
+		if (selector.length)
+			name = FileName(cp + selector.location, selector.length);
+		refNum = FilePrompt(name, 0x06, 0x00);
+		free(name);
 		break;
+		}
 	}
 
 
@@ -612,10 +618,15 @@ unsigned QueueEntry(struct ListEntry *e) {
 		query = SearchPrompt(e->name);
 		if (!query) return 0;
 		break;
-	default:
-		refNum = FilePrompt(NULL, 0x06, 0x00);
+	default: {
+		GSString255 *name = NULL;
+		if (e->selector)
+			name = FileName(e->selector + 1, e->selector[0]);
+		refNum = FilePrompt(name, 0x06, 0x00);
+		free(name);
 		if (!refNum) return 0;
 		break;
+		}
 	}
 
 

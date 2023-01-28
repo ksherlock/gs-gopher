@@ -2,6 +2,23 @@
 #include <stdint.h>
 #include <types.h>
 
+/*
+ * The UMN gopherd (version 3) considers these to be text files:
+ * '0' (text), '1' (index), 'M' (MIME), '2' (CSO), '4' (Mac Hex)
+ * 'h' (HTML) was not, for reasons.
+ * '6' (uuencoded file) is also not.
+ *
+ * Additionally, these mime types are text:
+ * message/rfc822 (email)
+ * application/postscript
+ * application/mac-binhex40
+ * application/rtf (often 'r')
+ * application/gopher*
+ *
+ * Most of those should probably just be saved. 
+ */
+
+
 enum {
 	kGopherTypeText = '0', 
 	kGopherTypeIndex = '1',

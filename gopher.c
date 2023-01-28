@@ -677,6 +677,27 @@ char *SearchPrompt(char *name) {
 	return NULL;
 }
 
+GSString255 *FileName(const char *path, word length) {
+	/* given a p-string path, generate an appropriate name to save as */
+
+	unsigned i;
+	GSString255 *name;
+
+	if (!path || !length) return NULL;
+
+	// path is a pstring so offset by 1.
+	for (i = length; i; --i) {
+		if (path[i - 1] == '/') break;
+	}
+	int nlen = length - i;
+
+	name = (GSString255 *)malloc(2 + nlen);
+	if (!name) return NULL;
+	name->length = nlen;
+	memcpy(name->text, path + i, nlen);
+	return name;
+}
+
 /*
  * return a file descriptor, 0 if canceled.
  */
@@ -740,8 +761,10 @@ fini:
 void DoSave(void) {
 	/* For a text window, save to a file... */
 
+	static RefNumRecGS closeDCB = { 1, 0 };
+	static IORecGS ioDCB = { 4, 0, NULL, 0, 0 };
+
 	Handle teH;
-	SFReplyRec2 sr;
 
 	GrafPortPtr win = FrontWindow();
 	if (!win) return;
@@ -753,73 +776,33 @@ void DoSave(void) {
 	if (_toolErr || !teH) return;
 
 
-	memset(&sr, 0, sizeof(sr));
-	sr.nameRefDesc = refIsNewHandle;
-	sr.pathRefDesc = refIsNewHandle;
+	// todo - keep the name in the cookie.
+	int refNum = FilePrompt(NULL, 0x04, 0x00);
+	if (refNum == 0) return;
 
-	// todo -- create default file name from the selector.
-	SFPutFile2(170, 35, 0, (Ref)"\pSave file as:", 0, (Ref)"\x09\x00text.file", &sr);
+	Handle textH = 0;
 
+	WaitCursor();
 
-	if (sr.good) {
-		static NameRecGS destroyDCB = { 1, NULL };
-		static CreateRecGS createDCB = { 4, NULL, 0xe3, 0x04, 0x00 };
-		static OpenRecGS openDCB = { 4, 0, NULL, writeEnable, 0 };
-		static RefNumRecGS closeDCB = { 1, 0 };
-		static IORecGS ioDCB = { 4, 0, NULL, 0, 0 };
+	/*
+	TEGetText normally returns the full text size;
+	bufferDesc | 0x20 will return only the selected text.
+	*/ 
+	ioDCB.requestCount = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
+	HLock(textH);
+	ioDCB.dataBuffer = *(void **)textH;
 
-		Handle h;
-		Handle textH = 0;
-		GSString255 *name;
-		word error = 0;
+	closeDCB.refNum = refNum;
+	ioDCB.refNum = refNum;
 
-		WaitCursor();
-
-		/*
-		TEGetText normally returns the full text size;
-		bufferDesc | 0x20 will return only the selected text.
-		*/ 
-		ioDCB.requestCount = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
-		HLock(textH);
-		ioDCB.dataBuffer = *(void **)textH;
-
-		h = (Handle)sr.pathRef;
-		HLock(h);
-		name = &(*(ResultBuf255 **)h)->bufString;
-		destroyDCB.pathname = name;
-		createDCB.pathname = name;
-		openDCB.pathname = name;
-
-		DestroyGS(&destroyDCB);
-		CreateGS(&createDCB);
-		if (_toolErr) {
-			error = _toolErr;
-			goto fini;
-		}
-
-		OpenGS(&openDCB);
-		if (_toolErr) {
-			error = _toolErr;
-			goto fini;
-		}
-		closeDCB.refNum = openDCB.refNum;
-		ioDCB.refNum = openDCB.refNum;
-
-		WriteGS(&ioDCB);
-		if (_toolErr) error = _toolErr;
-		CloseGS(&closeDCB);
-
-fini:
-		DisposeHandle(textH);
-		DisposeHandle((Handle)sr.nameRef);
-		DisposeHandle((Handle)sr.pathRef);
-		InitCursor();
-
-		if (error) {
-			ErrorWindow(0, NULL, error);
-		}
+	WriteGS(&ioDCB);
+	if (_toolErr) {
+		ErrorWindow(0, NULL, _toolErr);		
 	}
+	CloseGS(&closeDCB);
 
+	DisposeHandle(textH);
+	InitCursor();
 }
 
 #define kPageUp 't'
