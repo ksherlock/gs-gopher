@@ -365,6 +365,20 @@ static void Setup(void) {
 	SetMenuBar(0);
 	FixAppleMenu(kAppleMID);
 
+
+	/* next theme! */
+	if (1) {
+		ColorTable table = {
+			0x0000, 0x0555, 0x0aaa, 0x0fff,
+			0x0000, 0x0555, 0x0aaa, 0x0fff,
+			0x0000, 0x0555, 0x0aaa, 0x0fff,
+			0x0000, 0x0555, 0x0aaa, 0x0fff,
+		};
+		SetColorTable(0, table);
+		Desktop(5, 0x400000aa);
+	}
+
+
 	FixMenuBar();
 	DrawMenuBar();
 
