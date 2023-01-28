@@ -1,0 +1,11 @@
+v 1
+---
+* New monospaced font (MonteCarlo, by Gilles Boccon-Gibod)
+* Search support
+* Non-text files can be saved
+* Various fixes
+
+
+v 0
+---
+* Initial Release
