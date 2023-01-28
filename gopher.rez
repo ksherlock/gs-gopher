@@ -8,11 +8,11 @@ resource rVersion (0x1) {
 		0x0,
 		0x0,
 		alpha,
-		0x0
+		0x1
 	},
 	verUS,
 	"Gopher",
-	"(C) 2022 Kelvin W Sherlock "
+	"(C) 2022-2023 Kelvin W Sherlock "
 };
 
 resource rComment(0x1) {
@@ -1177,9 +1177,9 @@ resource rControlTemplate (kAboutText) {
 resource rTextForLETextBox2 (kAboutText) {
 	TBForeColor TBColor0
 	TBBackColor TBColorF
-	"GS-Gopher 1.0\n"
+	"GS-Gopher alpha 1\n"
 	TBStyleItalic
-	"2022-12-29\n"
+	"2023-01-28\n"
 };
 
 

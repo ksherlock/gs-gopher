@@ -31,6 +31,13 @@
 #include "q.h"
 
 
+enum {
+	kThemeStandard = 0,
+	kThemeNeXT = 1
+};
+
+unsigned Theme = kThemeStandard;
+
 const char *ReqName = "\pTCP/IP~kelvin~gopher~";
 
 unsigned MyID;
@@ -367,7 +374,7 @@ static void Setup(void) {
 
 
 	/* next theme! */
-	if (1) {
+	if (Theme == kThemeNeXT) {
 		ColorTable table = {
 			0x0000, 0x0555, 0x0aaa, 0x0fff,
 			0x0000, 0x0555, 0x0aaa, 0x0fff,
@@ -411,12 +418,12 @@ static void Setup(void) {
 
 Pointer IconForType(unsigned type) {
 	switch(type) {
-		case '0': return Icons[0]; /* text */
-		case '1': return Icons[1]; /* directory/index */
+		case kGopherTypeText: return Icons[0]; /* text */
+		case kGopherTypeIndex: return Icons[1]; /* directory/index */
 		case '9': return Icons[2]; /* binary */
-		case '7': return Icons[4];
-		case 'i': /* informational */
-		case '3': /* error */
+		case kGopherTypeSearch: return Icons[4];
+		case kGopherTypeInfo: /* informational */
+		case kGopherTypeError: /* error */
 			return NULL;
 		default: return Icons[3];
 	}
