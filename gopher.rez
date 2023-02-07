@@ -109,7 +109,7 @@ resource rMenu (kNetworkMID, nocrossbank){
 
 resource rMenu (kBookmarkMID, nocrossbank){
 	kBookmarkMID,
-	0xA008,
+	0xA008 | rmDisabled,
 	kBookmarkMID,
 	{
 		kAddBookmarkItem
@@ -118,7 +118,7 @@ resource rMenu (kBookmarkMID, nocrossbank){
 
 resource rMenu (kWindowMID, nocrossbank){
 	kWindowMID,
-	0xA008,
+	0xA008 | rmDisabled,
 	kWindowMID,
 	{
 	};
@@ -129,7 +129,7 @@ resource rMenuItem (kUndoItem, nocrossbank){
     "Z",
     "z",
     0,
-    0x8040,
+    0x8000 | rMIDivider,
     kUndoItem
 };
 
@@ -203,7 +203,7 @@ resource rMenuItem (kPreferences, nocrossbank){
 	",",
 	",",
 	0,
-	0x8040,
+	0x8000 | rMIDivider | rMIDisabled,
 	kPreferences
 };
 
@@ -233,7 +233,7 @@ resource rMenuItem (kCloseItem, nocrossbank){
 	"W",
 	"w",
 	0,
-	0x8040,
+	0x8000 | rMIDivider,
 	kCloseItem
 };
 
@@ -253,7 +253,7 @@ resource rMenuItem (kPrintItem, nocrossbank){
 	"P",
 	"p",
 	0,
-	0x8040,
+	0x8000 | rMIDivider,
 	kPrintItem    
 };
 
