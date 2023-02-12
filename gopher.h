@@ -45,17 +45,20 @@ typedef struct ListEntry {
 // window refcon
 typedef struct cookie {
 	unsigned type;
+	unsigned menuID;
 	char *title; // window title
 } cookie;
 
 typedef struct text_cookie {
 	unsigned type;
+	unsigned menuID;
 	char *title;
 	char data[1];
 } text_cookie;
 
 typedef struct index_cookie {
 	unsigned type;
+	unsigned menuID;
 	char *title;
 	Handle handle;
 	unsigned listSize;

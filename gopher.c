@@ -48,10 +48,11 @@ MenuRecHndl hMenu = NULL;
 
 static Pointer Icons[4];
 
+#define kMaxWindows 16
 
-unsigned window_count = 0;
-unsigned window_active = 0;
-GrafPortPtr windows[10];
+
+GrafPortPtr Windows[kMaxWindows];
+unsigned WindowBits = 0;
 
 unsigned MenuWidth = 0;
 
@@ -454,8 +455,7 @@ static void Setup(void) {
 	Icons[4] = (Pointer)GetIcon(kIconSearch);
 
 
-	window_active = 0;
-	window_count = 0;
+	WindowBits = 0;
 
 	if (TCPIPGetConnectStatus()) {
 		NetworkUpdate(1);
@@ -601,7 +601,7 @@ void DoOpen(void) {
 	unsigned ok;
 
 
-	if (window_count >= 10) return;
+	if (WindowBits == 0xffff) return;
 
 	// GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindowShadow, rWindParam1);
 	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindow, rWindParam1);
@@ -909,6 +909,53 @@ static pascal void KeyFilter(Handle teH, unsigned type) {
 #pragma databank 0
 
 
+// update the Windows menu....
+void AddWindow(GrafPortPtr win, struct cookie *cookie) {
+
+	unsigned id = 0;
+	unsigned mask;
+	static MenuItemTemplate template = { 0 };
+
+	for (id = 0, mask = 1; ; ++id, mask <<= 1) {
+		if (!(WindowBits & mask)) break;
+	}
+
+	template.itemTitleRef = (Ref)cookie->title;
+	template.itemID = WindowBase + id;
+
+	cookie->menuID = id;
+	Windows[id] = win;
+	WindowBits |= mask;
+
+	InsertMItem2(refIsPointer, (Ref)&template, 0xffff, kWindowMID);
+	CalcMenuSize(0, 0, kWindowMID);
+
+	if (WindowBits == 1) {
+		SetMenuFlag(enableMenu, kWindowMID);
+		HiliteMenu(0, kWindowMID);
+		// DrawMenuBar causes a noticiable refresh.
+		// DrawMenuBar();
+	}
+}
+
+void RemoveWindow(struct cookie *cookie) {
+	unsigned id = cookie->menuID;
+
+	DeleteMItem(id + WindowBase);
+	CalcMenuSize(0, 0, kWindowMID);
+
+	Windows[id] = NULL;
+	WindowBits &= ~(1 << id);
+
+
+	if (WindowBits == 0) {
+		SetMenuFlag(disableMenu, kWindowMID);
+		HiliteMenu(0, kWindowMID);
+		// DrawMenuBar();
+	}
+
+}
+
 void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	GrafPortPtr win;
@@ -929,6 +976,9 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	(**((TERecord **)teH)).textFlags |= fReadOnly;
 	(**((TERecord **)teH)).keyFilter = (ProcPtr)KeyFilter;
+
+
+	AddWindow(win, (struct cookie *)cookie);
 
 }
 #pragma toolparms 1
@@ -1021,6 +1071,8 @@ void NewIndexWindow(index_cookie *cookie) {
 
 	ShowWindow(win);
 	BringToFront(win);
+
+	AddWindow(win, (struct cookie *)cookie);
 }
 
 void DoCloseWindow(GrafPortPtr win) {
@@ -1034,13 +1086,13 @@ void DoCloseWindow(GrafPortPtr win) {
 		if (c->type == kGopherIndex) {
 			DisposeHandle(((index_cookie *)c)->handle);
 		}
+		RemoveWindow(c);
 		free(c);
 	}
 
 	CloseWindow(win);
 
 	// todo -- update menus, etc.
-
 }
 
 void DoSelectAll(void) {
@@ -1174,7 +1226,6 @@ void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
 	unsigned menu = event.wmTaskData >> 16;
 
-	HiliteMenu(0, menu);
 	switch (item) {
 		case kUndoItem:
 		case kCutItem:
@@ -1221,9 +1272,22 @@ void DoMenu(void) {
 			TCPIPDisconnect(1, NULL);
 			break;
 	}
+
+	// handle window selection.
+	if (menu == kWindowMID) {
+		unsigned id = item - WindowBase;
+		if (id < kMaxWindows) {
+			SelectWindow(Windows[id]);
+		}
+	}
+
+	HiliteMenu(0, menu);
 }
 
 void OpenIndex(ListCtlRec *list) {
+
+	if (WindowBits == 0xffff) return;
+
 	ListEntry *e = SelectedIndex(list);
 	if (!e) return;
 
