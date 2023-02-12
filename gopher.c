@@ -29,6 +29,7 @@
 #include "defines.h"
 #include "gopher.h"
 #include "q.h"
+#include "hierarchic.h"
 
 
 enum {
@@ -42,6 +43,9 @@ const char *ReqName = "\pTCP/IP~kelvin~gopher~";
 
 unsigned MyID;
 
+MenuRecHndl hMenu = NULL;
+
+
 static Pointer Icons[4];
 
 
@@ -49,6 +53,7 @@ unsigned window_count = 0;
 unsigned window_active = 0;
 GrafPortPtr windows[10];
 
+unsigned MenuWidth = 0;
 
 #pragma toolparms 1
 #pragma databank 1
@@ -200,6 +205,37 @@ void WindowChange(void) {
 	}
 }
 
+#if 0
+pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHit, word yHit, word param) {
+	word rv = 0;
+	menuRec *menu = *menuRecH;
+
+	switch(message) {
+	case mDrawMsg:
+		/* draw the menu */
+		break;
+	case mChooseMsg:
+		/* return selected menu item */
+		break;
+	case mSizeMsg:
+		/* calculate menu size */
+		break;
+	case mDrawTitle:
+		SetBackColor(0xaaaa); // green
+		SetSolidBackPat(0xaaaa);
+		PaintRect(rectPtr);
+		rv = 1; /* prevent normal title drawing code */
+		break;
+	case mDrawMItem:
+		/* draw a menu item */
+		break;
+	case mGetMItemID:
+		break;
+	}
+
+	return rv;
+}
+#endif
 
 #pragma databank 1
 #pragma toolparms 1
@@ -366,6 +402,7 @@ Handle LoadFixedFont(void) {
 static void Setup(void) {
 
 	Handle h;
+	unsigned i;
 	/* menu bars */
 
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
@@ -385,9 +422,27 @@ static void Setup(void) {
 		Desktop(5, 0x400000aa);
 	}
 
+	if (HierarchicStartUp(MyID)) {
+		MenuRecHndl m;
+
+		m = GetMHandle(kTextMID);
+		DeleteMenu(kTextMID);
+		DisposeMenu(m);
+
+		hMenu = HierarchicNew(refIsResource, kH_TextMID);
+		InsertMenu(hMenu, kEditMID);
+	}
+
 
 	FixMenuBar();
 	DrawMenuBar();
+
+	/* find the right edge of the menu bar */
+	MenuWidth = 0;
+	MenuWidth = GetMTitleStart();
+	for (i = kAppleMID; i <= kWindowMID; ++i)
+		MenuWidth += GetMTitleWidth(i);
+
 
 	InitCursor();
 	StartupQueue();
@@ -1417,6 +1472,10 @@ int main(void) {
 	}
 
 exit:
+	if (hMenu) {
+		HierarchicDispose(hMenu);
+		HierarchicShutDown();
+	}
 	ShutDownTools(refIsHandle, tlRef);
 	MMShutDown(MyID);
 	TLShutDown();

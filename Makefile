@@ -12,7 +12,7 @@ LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/q.o
+OBJS = o/gopher.o o/q.o o/hierarchic.o
 
 ROBJ = o/gopher.r
 
@@ -24,10 +24,12 @@ gopher: $(OBJS) $(ROBJ)
 o:
 	mkdir o
 
-o/gopher.o : gopher.c defines.h gopher.h
+o/gopher.o : gopher.c defines.h gopher.h hierarchic.h
 o/index.o: index.c defines.h
 o/url.o: url.c url.h
 o/gopher-url.o: gopher-url.c gopher.h
+o/hierarchic.o: hierarchic.c hierarchic.h
+
 
 o/gopher.r: gopher.rez defines.h
 

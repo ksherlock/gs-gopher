@@ -53,6 +53,7 @@ resource rMenuBar (kMenuBarID) {
 		kAppleMID,
 		kFileMID,
 		kEditMID,
+		kTextMID,
 		kNetworkMID,
 		kBookmarkMID,
 		kWindowMID
@@ -91,10 +92,63 @@ resource rMenu (kEditMID, nocrossbank){
         kCopyItem,
         kPasteItem,
         kClearItem,
-        kSelectAllItem,
-        kWrapTextItem
+        kSelectAllItem
     };
 };
+
+
+resource rMenu (kTextMID, nocrossbank){
+	kTextMID,
+	0xA008,
+	kTextMID,
+	{
+		kWrapTextItem,
+		kDeDotItem,
+		kTab4Item,
+		kTab8Item,
+		kEncoding1Item,
+		kEncoding2Item,
+		kBSQItem
+	};
+};
+
+// Hierarchic Text menu
+resource rMenu (kH_TextMID, nocrossbank){
+	kTextMID,
+	0xA008,
+	kTextMID,
+	{
+		kWrapTextItem,
+		kDeDotItem,
+		kH_TabItem,
+		kH_EncodingItem,
+		kBSQItem
+	};
+};
+
+// Hierarchic Tab submenu
+resource rMenu (kH_TabItem, nocrossbank){
+	kH_TabItem,
+	0x2008, // name is ptr
+	0, // submenu name must be 0.
+	{
+		kH_Tab4Item,
+		kH_Tab8Item
+	};
+};
+
+// Hierarchic Encoding submenu
+resource rMenu (kH_EncodingItem, nocrossbank){
+	kH_EncodingItem,
+	0x2008, // name is ptr
+	0, // submenu name must be 0
+	{
+		kH_Encoding1Item,
+		kH_Encoding2Item
+	};
+};
+
+
 
 resource rMenu (kNetworkMID, nocrossbank){
 	kNetworkMID,
@@ -188,6 +242,121 @@ resource rMenuItem (kWrapTextItem, nocrossbank){
     0x8000,
     kWrapTextItem
 };
+
+
+
+resource rMenuItem (kDeDotItem, nocrossbank){
+    kDeDotItem,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kDeDotItem
+};
+
+
+resource rMenuItem (kTab4Item, nocrossbank){
+    kTab4Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kTab4Item
+};
+
+resource rMenuItem (kTab8Item, nocrossbank){
+    kTab8Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kTab8Item
+};
+
+// hierarchic only!
+resource rMenuItem (kH_TabItem, nocrossbank){
+    kH_TabItem,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_TabItem
+};
+
+resource rMenuItem (kH_Tab4Item, nocrossbank){
+    kTab4Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_Tab4Item
+};
+
+resource rMenuItem (kH_Tab8Item, nocrossbank){
+    kTab8Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_Tab8Item
+};
+
+
+// hierarchic only!
+resource rMenuItem (kH_EncodingItem, nocrossbank){
+    kH_EncodingItem,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_EncodingItem
+};
+resource rMenuItem (kH_Encoding1Item, nocrossbank){
+    kEncoding1Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_Encoding1Item
+};
+
+resource rMenuItem (kH_Encoding2Item, nocrossbank){
+    kEncoding2Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kH_Encoding2Item
+};
+
+resource rMenuItem (kEncoding1Item, nocrossbank){
+    kEncoding1Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kEncoding1Item
+};
+
+resource rMenuItem (kEncoding2Item, nocrossbank){
+    kEncoding2Item,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kEncoding2Item
+};
+
+
+resource rMenuItem (kBSQItem, nocrossbank){
+    kBSQItem,
+    "",
+    "",
+    0,
+    0x8000 | rMIDisabled,
+    kBSQItem
+};
+
 
 resource rMenuItem (kAbout, nocrossbank){
 	kAbout,
@@ -314,6 +483,7 @@ resource rMenuItem (kAddBookmarkItem, nocrossbank)
 resource rPString (kAppleMID, nocrossbank){"@"};
 resource rPString (kFileMID, nocrossbank){"  File  "};
 resource rPString (kEditMID, nocrossbank){"  Edit  "};
+resource rPString (kTextMID, nocrossbank){"  Text  "};
 resource rPString (kNetworkMID, nocrossbank){"  Network  "};
 resource rPString (kBookmarkMID, nocrossbank){"  Bookmark  "};
 resource rPString (kWindowMID, nocrossbank){"  Window  "};
@@ -335,7 +505,24 @@ resource rPString (kCopyItem, nocrossbank){"Copy"};
 resource rPString (kPasteItem, nocrossbank){"Paste"};
 resource rPString (kClearItem, nocrossbank){"Clear"};
 resource rPString (kSelectAllItem, nocrossbank){"Select All"};
+
+
 resource rPString (kWrapTextItem, nocrossbank){"Wrap Text"};
+resource rPString (kDeDotItem, nocrossbank){"Fix Dots"};
+resource rPString (kTab4Item, nocrossbank){"Tab Stops: 4"};
+resource rPString (kTab8Item, nocrossbank){"Tab Stops: 8"};
+resource rPString (kEncoding1Item, nocrossbank){"Encoding: MacRoman"};
+resource rPString (kEncoding2Item, nocrossbank){"Encoding: UTF"};
+resource rPString (kBSQItem, nocrossbank){"Process BSQ"};
+
+
+resource rPString (kH_TabItem, nocrossbank){ $$Format("Tab Stops{*r%08x", kH_TabItem) };
+resource rPString (kH_EncodingItem, nocrossbank){ $$Format("Encoding{*r%08x", kH_EncodingItem) };
+
+resource rPString (kH_Tab4Item, nocrossbank){"4"};
+resource rPString (kH_Tab8Item, nocrossbank){"8"};
+resource rPString (kH_Encoding1Item, nocrossbank){"MacRoman"};
+resource rPString (kH_Encoding2Item, nocrossbank){"UTF"};
 
 
 resource rPString (kConnectItem, nocrossbank){"Connect"};
