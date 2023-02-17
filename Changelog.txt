@@ -1,4 +1,12 @@
-v 1
+alpha 2
+---
+* "Window" menu is now functional.
+* Added "Text" menu for text-related activities.
+* If hierarchic is installed, some menus will be, well, hierarchic.
+* Disables some more menus that aren't yet implemented.
+* Network status window implemented.
+
+alpha 1
 ---
 * New monospaced font (MonteCarlo, by Gilles Boccon-Gibod)
 * Search support
@@ -6,6 +14,6 @@ v 1
 * Various fixes
 
 
-v 0
+alpha 0
 ---
 * Initial Release
