@@ -31,6 +31,8 @@
 #include "q.h"
 #include "hierarchic.h"
 
+unsigned Quit = 0;
+
 
 enum {
 	kThemeStandard = 0,
@@ -61,6 +63,34 @@ unsigned MenuWidth = 0;
 
 pascal void WindowDrawControls(void) {
 	DrawControls(GetPort());
+}
+
+static unsigned EndDialog = 0;
+static void SimpleBeepProc(WmTaskRec *event) {
+	EndDialog = 1;
+}
+
+void SimpleEventHook(WmTaskRec *event) {
+	if (!event) return;
+
+	unsigned what = event->what;
+	unsigned message = event->message;
+	if (what == keyDownEvt || what == autoKeyEvt) {
+
+		if (message = 0x1b) EndDialog = 1; /* escape */
+		if (event->modifiers & appleKey) {
+
+			switch(message) {
+			case 'q':
+			case 'Q':
+				Quit = 1;
+			case '.':
+			case 'w':
+			case 'W':
+				EndDialog = 1;
+			}
+		}
+	}
 }
 
 #pragma toolparms 0
@@ -485,7 +515,6 @@ Pointer IconForType(unsigned type) {
 }
 
 static WmTaskRec event;
-unsigned Quit = 0;
 
 
 
@@ -503,6 +532,7 @@ enum {
 void OpenEventHook(WmTaskRec *event) {
 	// Line Edit is pretty dumb about control characters.
 	// this filters out control characters (and converts end-of-edit chars to app4 events)
+	if (!event) return;
 
 	unsigned what = event->what;
 	if (what == keyDownEvt || what == autoKeyEvt) {
@@ -564,31 +594,118 @@ void OpenEventHook(WmTaskRec *event) {
 
 void DoAbout(void) {
 
-#if 0
-	AlertWindow(refIsResource << 1, NULL, 1);
-#else
 	GrafPortPtr win;
 	GrafPortPtr shadow;
 	long id;
 
 	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kAboutWindow, rWindParam1);
 
+	EndDialog = 0;
+
 	shadow = CreateShadowWindow(win);
 	for(;;) {
-		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
-		id = DoModalWindow(&event, NULL, NULL, (VoidProcPtr)-1, flags);
+		#define flags mwUpdateAll | mwDeskAcc
+		id = DoModalWindow(&event, NULL, (VoidProcPtr)SimpleEventHook, (VoidProcPtr)SimpleBeepProc, flags);
 		#undef flags
 
 		if (id == kAboutButton) break;
+		if (EndDialog) break;
 
 		ProcessQueue();
 	}
 
 	CloseWindow(shadow);
 	CloseWindow(win);
-	InitCursor();
-#endif
 }
+
+
+void SetControlTextByID(GrafPortPtr win, Long id, char *text) {
+	if (text && *text) {
+		// we can't just set the title, we also have to swap from resource to pointer and set the length.
+		CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
+		if (ctrlH) {
+			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH);
+			SetCtlValue(*text, ctrlH);
+			SetCtlTitle(text+1, (Handle)ctrlH);
+		}
+	}
+}
+
+void DoNetworkHelper(GrafPortPtr win) {
+	long ip;
+	static char buffer[16];
+
+	if (TCPIPGetConnectStatus()) {
+		ip = TCPIPGetMyIPAddress();
+		TCPIPConvertIPToASCII(ip, buffer, 0);
+		SetControlTextByID(win, kNetworkStatusRight, "\pConnected");
+		SetControlTextByID(win, kNetworkIPRight, buffer);
+
+		HiliteCtlByID(inactiveHilite, win, kNetworkConnect);
+		HiliteCtlByID(noHilite, win, kNetworkDisconnect);
+
+	} else {
+		SetControlTextByID(win, kNetworkStatusRight, "\pDisconnected");
+		SetControlTextByID(win, kNetworkIPRight, "\p");
+
+		HiliteCtlByID(noHilite, win, kNetworkConnect);
+		HiliteCtlByID(inactiveHilite, win, kNetworkDisconnect);
+	}
+}
+
+#pragma databank 1
+#pragma toolparms 1
+
+void NetworkStatusCallback(const char *str) {
+	SetControlTextByID(NULL, kNetworkStatusRight, str);
+}
+
+#pragma databank 0
+#pragma toolparms 0
+
+void DoNetwork(void) {
+
+
+	GrafPortPtr win;
+	GrafPortPtr shadow;
+	unsigned id;
+
+
+	EndDialog = 0;
+
+	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kNetworkWindow, rWindParam1);
+
+	shadow = CreateShadowWindow(win);
+
+	DoNetworkHelper(win);
+
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc
+		id = DoModalWindow(&event, NULL, (VoidProcPtr)SimpleEventHook, (VoidProcPtr)SimpleBeepProc, flags);
+		#undef flags
+
+		if (EndDialog) break;
+
+		if (id == kNetworkConnect) {
+			WaitCursor();
+			TCPIPConnect(NetworkStatusCallback);
+			InitCursor();
+			DoNetworkHelper(win);
+		}
+		if (id == kNetworkDisconnect) {
+			WaitCursor();
+			TCPIPDisconnect(1, NetworkStatusCallback);
+			InitCursor();
+			DoNetworkHelper(win);
+		}
+
+		ProcessQueue();
+	}
+
+	CloseWindow(shadow);
+	CloseWindow(win);
+}
+
 
 
 void DoOpen(void) {
@@ -1270,6 +1387,10 @@ void DoMenu(void) {
 
 		case kDisconnectItem:
 			TCPIPDisconnect(1, NULL);
+			break;
+
+		case kNetworkStatusItem:
+			DoNetwork();
 			break;
 	}
 

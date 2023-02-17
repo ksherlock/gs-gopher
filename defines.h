@@ -45,7 +45,7 @@
 #define kTab8Item TextBase+3
 #define kEncoding1Item TextBase+4
 #define kEncoding2Item TextBase+5
-#define kBSQItem TextBase+6
+#define kBinsciiItem TextBase+6
 
 #define kH_TabItem H_TextBase+0
 #define kH_Tab4Item H_TextBase+1
@@ -69,13 +69,11 @@
 #define kIndexWindow 0x0100
 #define kTextWindow	0x0200
 #define kURLWindow 0x0300
-#define kURLWindowShadow 0x0301
 #define kPrefsWindow 0x0400
 #define kNetworkWindow 0x0500
 #define kAboutWindow 0x0600
-
 #define kSearchWindow 0x0700
-#define kSearchWindowShadow 0x0701
+
 
 #define kSearchText kSearchWindow+1
 #define kSearchLineEdit kSearchWindow+2
@@ -89,6 +87,13 @@
 #define kAboutIcon kAboutWindow+2
 #define kAboutText kAboutWindow+3
 
+
+#define kNetworkStatusLeft kNetworkWindow+1
+#define kNetworkStatusRight kNetworkWindow+2
+#define kNetworkIPLeft kNetworkWindow+3
+#define kNetworkIPRight kNetworkWindow+4
+#define kNetworkConnect kNetworkWindow+5
+#define kNetworkDisconnect kNetworkWindow+6
 
 #define kIconText 1
 #define kIconBinary 2

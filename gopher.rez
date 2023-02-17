@@ -8,7 +8,7 @@ resource rVersion (0x1) {
 		0x0,
 		0x0,
 		alpha,
-		0x1
+		0x2
 	},
 	verUS,
 	"Gopher",
@@ -108,7 +108,7 @@ resource rMenu (kTextMID, nocrossbank){
 		kTab8Item,
 		kEncoding1Item,
 		kEncoding2Item,
-		kBSQItem
+		kBinsciiItem
 	};
 };
 
@@ -122,7 +122,7 @@ resource rMenu (kH_TextMID, nocrossbank){
 		kDeDotItem,
 		kH_TabItem,
 		kH_EncodingItem,
-		kBSQItem
+		kBinsciiItem
 	};
 };
 
@@ -348,13 +348,13 @@ resource rMenuItem (kEncoding2Item, nocrossbank){
 };
 
 
-resource rMenuItem (kBSQItem, nocrossbank){
-    kBSQItem,
+resource rMenuItem (kBinsciiItem, nocrossbank){
+    kBinsciiItem,
     "",
     "",
     0,
     0x8000 | rMIDisabled,
-    kBSQItem
+    kBinsciiItem
 };
 
 
@@ -413,7 +413,7 @@ resource rMenuItem (kPageSetupItem, nocrossbank){
 	"",
 	"",
 	0,
-	0x8000,
+	0x8000 | rMIDisabled,
 	kPageSetupItem    
 };
 
@@ -422,7 +422,7 @@ resource rMenuItem (kPrintItem, nocrossbank){
 	"P",
 	"p",
 	0,
-	0x8000 | rMIDivider,
+	0x8000 | rMIDisabled | rMIDivider,
 	kPrintItem    
 };
 
@@ -513,7 +513,7 @@ resource rPString (kTab4Item, nocrossbank){"Tab Stops: 4"};
 resource rPString (kTab8Item, nocrossbank){"Tab Stops: 8"};
 resource rPString (kEncoding1Item, nocrossbank){"Encoding: MacRoman"};
 resource rPString (kEncoding2Item, nocrossbank){"Encoding: UTF"};
-resource rPString (kBSQItem, nocrossbank){"Process BSQ"};
+resource rPString (kBinsciiItem, nocrossbank){"Process BinSCII"};
 
 
 resource rPString (kH_TabItem, nocrossbank){ $$Format("Tab Stops{*r%08x", kH_TabItem) };
@@ -532,12 +532,8 @@ resource rPString (kNetworkStatusItem, nocrossbank){"Status..."};
 resource rPString (kAddBookmarkItem, nocrossbank){"Add Bookmark..."};
 
 
-/*
- gopher window
-*/
 
-
-// currently, for the list manager, height must be 10 * x
+// currently, for the list manager, height must be 11 * x
 
 #define IndexWindowWidth (632-8)
 #define IndexWindowHeight (194-29)
@@ -612,26 +608,6 @@ resource rWindParam1 (kURLWindow) {
 	singleResource /* control descriptor */
 };
 
-resource rWindParam1 (kURLWindowShadow) {
-	fVis + fFlex,
-	0, /* title id */
-	0x0,
-	{0, 0, 0, 0},
-	0, /* color table */
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	0,
-	0,
-	{50+1, 40+2, 70+1, 600+2}, /* wPosition */
-	infront,
-	0, /* rControlList */
-	0
-};
-
-
 #define SearchWindowWidth (600-40)
 resource rWindParam1 (kSearchWindow) {
 	/*fAlert + */ fVis + fFlex,
@@ -654,24 +630,8 @@ resource rWindParam1 (kSearchWindow) {
 	ResourceToResource /* control descriptor */
 };
 
-resource rWindParam1 (kSearchWindowShadow) {
-	fVis + fFlex,
-	0, /* title id */
-	0x0,
-	{0, 0, 0, 0},
-	0, /* color table */
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	0,
-	0,
-	{50+1, 40+2, 90+1, 600+2}, /* wPosition */
-	infront,
-	0, /* rControlList */
-	0
-};
+
+
 
 resource rControlList(kSearchWindow) {
 	{
@@ -1364,9 +1324,9 @@ resource rControlTemplate (kAboutText) {
 resource rTextForLETextBox2 (kAboutText) {
 	TBForeColor TBColor0
 	TBBackColor TBColorF
-	"GS-Gopher alpha 1\n"
+	"GS-Gopher alpha 2\n"
 	TBStyleItalic
-	"2023-01-28\n"
+	"2023-02-16\n"
 };
 
 
@@ -1496,6 +1456,148 @@ resource rIcon(kAboutIcon) {
 
 };
 
+
+/* network status window */
+#define kNetworkHeight 50
+#define kNetworkWidth 384
+resource rWindParam1 (kNetworkWindow) {
+	0x20A0,
+	0x0,
+	0x0,
+	{0, 0, 0, 0},
+	0x0,
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	0,
+	{81, 128, 81+kNetworkHeight, 128+kNetworkWidth},
+	infront,
+	kNetworkWindow,
+	0x9
+};
+
+resource rControlList(kNetworkWindow) {
+	{
+		kNetworkStatusLeft,
+		kNetworkStatusRight,
+		kNetworkIPLeft,
+		kNetworkIPRight,
+		kNetworkConnect,
+		kNetworkDisconnect
+	}
+};
+
+
+resource rControlTemplate (kNetworkStatusLeft) {
+	kNetworkStatusLeft,
+	{4, 6, 14, 100},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkStatusLeft,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kNetworkStatusLeft) {
+	"Status:"
+};
+
+resource rControlTemplate (kNetworkStatusRight) {
+	kNetworkStatusRight,
+	{4, 104, 14, 300},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkStatusRight,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kNetworkStatusRight) {
+	""
+};
+
+
+resource rControlTemplate (kNetworkIPLeft) {
+	kNetworkIPLeft,
+	{18, 6, 28, 100},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkIPLeft,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kNetworkIPLeft) {
+	"IP Address:"
+};
+
+resource rControlTemplate (kNetworkIPRight) {
+	kNetworkIPRight,
+	{18, 104, 28, 300},
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkIPRight,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kNetworkIPRight) {
+	""
+};
+
+resource rControlTemplate (kNetworkConnect) {
+	kNetworkConnect,
+	{kNetworkHeight - 4 - 13, 6, kNetworkHeight-4, 100},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x2,
+			FctlProcNotPtr + FctlWantsEvents + refIsResource,
+			0x0,
+			kNetworkConnect
+		}
+	}
+};
+
+resource rPString(kNetworkConnect) {
+	"Connect"
+};
+
+
+resource rControlTemplate (kNetworkDisconnect) {
+	kNetworkDisconnect,
+	{kNetworkHeight - 4 - 13, kNetworkWidth-100, kNetworkHeight-4, kNetworkWidth - 6},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x2,
+			FctlProcNotPtr + FctlWantsEvents + refIsResource,
+			0x0,
+			kNetworkDisconnect
+		}
+	}
+};
+
+resource rPString(kNetworkDisconnect) {
+	"Disconnect"
+};
 
 
 read rFont(1) "resources/mc.font";
