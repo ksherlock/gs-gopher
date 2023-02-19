@@ -157,8 +157,10 @@ void MenuUpdate(int type) {
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
-		DisableMItem(kWrapTextItem);
+
 		SetMItemMark(0, kWrapTextItem);
+		SetMenuFlag(disableMenu, kTextMID);
+		HiliteMenu(0, kTextMID);
 
 		DisableMItem(kAddBookmarkItem);
 
@@ -177,8 +179,10 @@ void MenuUpdate(int type) {
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
-		DisableMItem(kWrapTextItem);
+
 		SetMItemMark(0, kWrapTextItem);
+		SetMenuFlag(disableMenu, kTextMID);
+		HiliteMenu(0, kTextMID);
 
 		EnableMItem(kAddBookmarkItem);
 
@@ -196,8 +200,11 @@ void MenuUpdate(int type) {
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		EnableMItem(kSelectAllItem);
-		EnableMItem(kWrapTextItem);
-		// todo -- SetMItemMark()
+
+		// todo - set wrap state, tab state, etc.
+		// SetMItemMark(0, kWrapTextItem);
+		SetMenuFlag(enableMenu, kTextMID);
+		HiliteMenu(0, kTextMID);
 
 		EnableMItem(kAddBookmarkItem);
 
@@ -936,6 +943,26 @@ fini:
 	return rv;
 }
 
+void DoBinscii(void) {
+
+	Handle teH;
+	long size;
+
+	GrafPortPtr win = FrontWindow();
+	if (!win) return;
+
+	if (GetSysWFlag(win)) return;
+
+	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+
+	if (_toolErr || !teH) return;
+
+	Handle textH = 0;
+	size = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
+	HLock(textH);
+	DecodeBINSCII(*(uint8_t **)textH, size);
+	DisposeHandle(textH);
+}
 
 void DoSave(void) {
 	/* For a text window, save to a file... */
@@ -1364,6 +1391,10 @@ void DoMenu(void) {
 
 		case kWrapTextItem:
 			ToggleWrapText();
+			break;
+
+		case kBinsciiItem:
+			DoBinscii();
 			break;
 
 

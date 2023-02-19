@@ -7,12 +7,12 @@ AS = occ
 CHTYP = iix chtyp
 COPYFORK = iix copyfork
 CFLAGS  =  -v -a0 -w-1
-ASFLAGS = 
+ASFLAGS = -v -a0
 LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/q.o o/hierarchic.o
+OBJS = o/gopher.o o/q.o o/hierarchic.o o/binscii.o o/crc.o
 
 ROBJ = o/gopher.r
 
@@ -29,6 +29,8 @@ o/index.o: index.c defines.h
 o/url.o: url.c url.h
 o/gopher-url.o: gopher-url.c gopher.h
 o/hierarchic.o: hierarchic.c hierarchic.h
+o/binscii.o : binscii.c
+o/crc.o : crc.asm crc.mac
 
 
 o/gopher.r: gopher.rez defines.h
@@ -39,7 +41,9 @@ o/%.r : %.rez | o
 	$(CC) -c -o $@ $<
 	iix rlint $@
 
-
 o/%.o : %.c | o
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+o/%.o : %.asm | o
+	$(CC) -c $(ASFLAGS) -o $@ $<
+	$(RM) $(@:.o=.root)

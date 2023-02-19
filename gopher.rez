@@ -357,7 +357,7 @@ resource rMenuItem (kBinsciiItem, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kBinsciiItem
 };
 
@@ -531,7 +531,7 @@ resource rPString (kTab4Item, nocrossbank){"Tab Stops: 4"};
 resource rPString (kTab8Item, nocrossbank){"Tab Stops: 8"};
 resource rPString (kEncoding1Item, nocrossbank){"Encoding: MacRoman"};
 resource rPString (kEncoding2Item, nocrossbank){"Encoding: UTF"};
-resource rPString (kBinsciiItem, nocrossbank){"Process BinSCII"};
+resource rPString (kBinsciiItem, nocrossbank){"Decode BinSCII"};
 
 
 resource rPString (kH_TabItem, nocrossbank){ $$Format("Tab Stops{*r%08x", kH_TabItem) };

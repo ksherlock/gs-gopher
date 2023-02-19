@@ -70,3 +70,6 @@ typedef struct index_cookie {
 
 void NewTextWindow(text_cookie *, void *, unsigned long);
 void NewIndexWindow(index_cookie *);
+
+int DecodeBINSCII(const unsigned char *ptr, long size);
+
