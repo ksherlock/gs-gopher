@@ -64,7 +64,7 @@ resource rMenu (kAppleMID, nocrossbank){
 	kAppleMID,
 	0xA008,
 	kAppleMID,
-	{ kAbout, kPreferences };
+	{ kAbout, kPreferences, kDivider };
 };
 
 resource rMenu (kFileMID, nocrossbank){
@@ -75,8 +75,10 @@ resource rMenu (kFileMID, nocrossbank){
 		kOpenItem,
 		kSaveItem,
 		kCloseItem,
+		kDivider,
 		kPageSetupItem,
 		kPrintItem,
+		kDivider,
 		kQuitItem
 	};
 };
@@ -88,10 +90,12 @@ resource rMenu (kEditMID, nocrossbank){
     kEditMID,
     {
         kUndoItem,
+        kDivider,
         kCutItem,
         kCopyItem,
         kPasteItem,
         kClearItem,
+        kDivider,
         kSelectAllItem
     };
 };
@@ -183,7 +187,7 @@ resource rMenuItem (kUndoItem, nocrossbank){
     "Z",
     "z",
     0,
-    0x8000 | rMIDivider,
+    0x8000,
     kUndoItem
 };
 
@@ -372,7 +376,7 @@ resource rMenuItem (kPreferences, nocrossbank){
 	",",
 	",",
 	0,
-	0x8000 | rMIDivider | rMIDisabled,
+	0x8000 | rMIDisabled,
 	kPreferences
 };
 
@@ -402,7 +406,7 @@ resource rMenuItem (kCloseItem, nocrossbank){
 	"W",
 	"w",
 	0,
-	0x8000 | rMIDivider,
+	0x8000,
 	kCloseItem
 };
 
@@ -422,7 +426,7 @@ resource rMenuItem (kPrintItem, nocrossbank){
 	"P",
 	"p",
 	0,
-	0x8000 | rMIDisabled | rMIDivider,
+	0x8000 | rMIDisabled,
 	kPrintItem    
 };
 
@@ -478,6 +482,20 @@ resource rMenuItem (kAddBookmarkItem, nocrossbank)
     kAddBookmarkItem
 };
 
+resource rMenuItem (kDivider)	{
+	kDivider,
+	"",
+	"",
+	0,
+	0x8000 | rMIDisabled,
+	kDivider
+};
+
+
+/* This menu item is the dividing line item.  It is used in several places. */
+resource rPString (kDivider) {
+	"-"
+};
 
 
 resource rPString (kAppleMID, nocrossbank){"@"};

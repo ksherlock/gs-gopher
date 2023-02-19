@@ -29,6 +29,7 @@
 
 #define	kAbout		AppleBase+0
 #define kPreferences AppleBase+1
+#define kDivider	AppleBase+2
 
 #define	kNewItem	FileBase+0
 #define	kOpenItem	FileBase+1
