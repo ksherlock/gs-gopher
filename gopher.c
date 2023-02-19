@@ -36,7 +36,8 @@ unsigned Quit = 0;
 
 enum {
 	kThemeStandard = 0,
-	kThemeNeXT = 1
+	kThemeNeXT,
+	kThemeMac
 };
 
 unsigned Theme = kThemeStandard;
@@ -458,6 +459,9 @@ static void Setup(void) {
 		};
 		SetColorTable(0, table);
 		Desktop(5, 0x400000aa);
+	}
+	if (Theme == kThemeMac) {
+		Desktop(5, 0x400002c3); // b/w
 	}
 
 	if (HierarchicStartUp(MyID)) {
