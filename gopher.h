@@ -27,6 +27,11 @@ enum {
 	kGopherTypeSearch = '7',
 };
 
+enum {
+	kFlagWrap = 0b00000001,
+	kFlagDeDot = 0b00000010,
+	kFlagTabMask = 0b00001100
+};
 
 // records for the List Manager index.
 typedef struct ListEntry {
@@ -46,20 +51,25 @@ typedef struct ListEntry {
 typedef struct cookie {
 	unsigned type;
 	unsigned menuID;
+	unsigned flags;
 	char *title; // window title
 } cookie;
 
 typedef struct text_cookie {
 	unsigned type;
 	unsigned menuID;
+	unsigned flags;
 	char *title;
+	//
 	char data[1];
 } text_cookie;
 
 typedef struct index_cookie {
 	unsigned type;
 	unsigned menuID;
+	unsigned flags;
 	char *title;
+	//
 	Handle handle;
 	unsigned listSize;
 	ListEntry *list;

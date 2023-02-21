@@ -142,7 +142,7 @@ void NetworkUpdate(unsigned up) {
 // todo -- update for DAs.
 // todo -- copy should only be active if there's a text selection or list selection.
 
-void MenuUpdate(int type) {
+void MenuUpdate(int type, unsigned flags) {
 
 	switch(type) {
 	case 0:
@@ -159,7 +159,7 @@ void MenuUpdate(int type) {
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
 
-		SetMItemMark(0, kWrapTextItem);
+		CheckMItem(0, kWrapTextItem);
 		SetMenuFlag(disableMenu, kTextMID);
 		HiliteMenu(0, kTextMID);
 
@@ -181,7 +181,7 @@ void MenuUpdate(int type) {
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
 
-		SetMItemMark(0, kWrapTextItem);
+		CheckMItem(0, kWrapTextItem);
 		SetMenuFlag(disableMenu, kTextMID);
 		HiliteMenu(0, kTextMID);
 
@@ -202,8 +202,7 @@ void MenuUpdate(int type) {
 		DisableMItem(kClearItem);
 		EnableMItem(kSelectAllItem);
 
-		// todo - set wrap state, tab state, etc.
-		// SetMItemMark(0, kWrapTextItem);
+		CheckMItem(flags & kFlagWrap, kWrapTextItem);
 		SetMenuFlag(enableMenu, kTextMID);
 		HiliteMenu(0, kTextMID);
 
@@ -223,7 +222,7 @@ void WindowChange(void) {
 	PrevWin = win;
 
 	if (!win) {
-		MenuUpdate(0);
+		MenuUpdate(0, 0);
 	}
 
 	if (GetSysWFlag(win)) {
@@ -233,14 +232,14 @@ void WindowChange(void) {
 
 	c = (struct cookie *)GetWRefCon(win);
 	if (!c) {
-		MenuUpdate(0);
+		MenuUpdate(0, 0);
 		return;
 	}
 
 	if (c->type == kGopherTypeIndex) {
-		MenuUpdate(1);
+		MenuUpdate(1, c->flags);
 	} else {
-		MenuUpdate(2);
+		MenuUpdate(2, c->flags);
 	}
 }
 
@@ -1347,20 +1346,25 @@ void ToggleWrapText(void) {
 
 
 	GrafPortPtr win = FrontWindow();
+	if (!win) return;
 
+	cookie *c = (cookie *)GetWRefCon(win);
+	if (!c || c->type != kGopherTypeText) return;
 
 	Handle teH = (Handle)GetCtlHandleFromID(win, kGopherText);
 	if (_toolErr || !teH) return;
 
 	TERecord *tr = *(TERecord **)teH;
-	if (tr->textFlags & fNoWordWrap) {
-		tr->textFlags &= ~fNoWordWrap;
-		tr->textFlags &= ~fReadOnly;
-		CheckMItem(1, kWrapTextItem);
-	} else {
+	if (c->flags & kFlagWrap) {
 		tr->textFlags |= fNoWordWrap;
 		tr->textFlags &= ~fReadOnly;
 		SetMItemMark(0, kWrapTextItem);
+		c->flags &= ~kFlagWrap;
+	} else {
+		tr->textFlags &= ~fNoWordWrap;
+		tr->textFlags &= ~fReadOnly;
+		CheckMItem(1, kWrapTextItem);
+		c->flags |= kFlagWrap;
 	}
 
 	// call TEStyleChange to force a re-layout.

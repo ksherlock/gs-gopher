@@ -21,6 +21,10 @@ gopher: $(OBJS) $(ROBJ)
 	$(COPYFORK) $(ROBJ) $@ -r
 	$(CHTYP) -t s16 -a 56071 $@
 
+.PHONY: clean
+clean:
+	$(RM) gopher $(OBJS) $(ROBJ)
+
 o:
 	mkdir o
 
