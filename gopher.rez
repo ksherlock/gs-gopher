@@ -1618,4 +1618,5 @@ resource rPString(kNetworkDisconnect) {
 };
 
 
-read rFont(1) "resources/mc.font";
+read rFont(1) "resources/Monte.Carlo.11";
+read rFont(0xFFFD) "resources/Chicago.09";

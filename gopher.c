@@ -400,7 +400,7 @@ Handle LoadFixedFont(void) {
 
 	h = LoadResource(rFont, 1);
 	if (_toolErr) return NULL;
-	// DetachResource(rFont, FixedFontID);
+	DetachResource(rFont, 1);
 
 	HLock(h);
 	ptr = *(unsigned char **)h;
@@ -423,15 +423,15 @@ Handle LoadFixedFont(void) {
 	// fh->fbrExtent == width
 
 
-	AddFamily(newFamily, ptr); // TODO - does FontManager retain a ptr?
+	AddFamily(newFamily, ptr);
+	// remove the name...
+
 	size = GetHandleSize(h) - offset; // skip pascal name
 
-	h2 = NewHandle(size, MyID, attrNoSpec, 0);
-	PtrToHand(ptr + offset, h2, size);
-	HUnlock(h);
-	ReleaseResource(-1, rFont, 1);
-	AddFontVar((FontHndl)h2, 0);
-	return h2;
+	BlockMove(ptr + offset, ptr, size);
+	SetHandleSize(size, h);
+	AddFontVar((FontHndl)h, 0);
+	return h;
 }
 
 
