@@ -7,6 +7,7 @@
 #include <memory.h>
 #include <misctool.h>
 #include <tcpip.h>
+#include <window.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -128,6 +129,21 @@ void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error) {
 			}
 			break;
 	}
+
+	if (new_error) {
+		char *subs[2];
+
+		subs[0] = item->host ? item->host : "";
+		subs[1] = item->selector ? item->selector : "";
+
+		switch(new_error) {
+			case terrDNR_Failed:
+			case terrDN_NoDNSEntry:
+				AlertWindow(awPString, (Pointer)subs, (Ref)"54~*0: DNS error.~^#6");
+				break;
+		}
+	}
+
 	if (item->handle) DisposeHandle(item->handle);
 	if (item->host) free(item->host);
 	if (item->refNum) {
