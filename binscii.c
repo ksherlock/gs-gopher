@@ -35,7 +35,7 @@ static int error(int e) {
 	};
 
 	if (e >= BS_NOT_BINSCII && e <= BS_PARTIAL)
-		AlertWindow(0, NULL, (Ref)messages[e]);
+		AlertWindow(awPointer, NULL, (Ref)messages[e]);
 	return e;
 }
 

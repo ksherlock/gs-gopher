@@ -1667,13 +1667,13 @@ int main(void) {
 
 	LoadOneTool(54, 0x0300);
 	if (_toolErr) {
-		AlertWindow(awCString, NULL,
+		AlertWindow(awPointer, NULL,
 			(Ref)"24~Marinetti 3.0b11 or newer is required.~^Too Bad");
 		goto exit;
 	}
 	// if (TCPIPVersion() & 0x7fff < 0x0300)
 	if (TCPIPLongVersion() < 0x03006011) {
-		AlertWindow(awCString, NULL,
+		AlertWindow(awPointer, NULL,
 			(Ref)"24~Marinetti 3.0b11 or newer is required.~^Too Bad");
 		goto exit;
 	}
