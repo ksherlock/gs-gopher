@@ -58,7 +58,8 @@ typedef struct DownloadItem {
 /* extra errors */
 enum {
 	terrDNR_Failed = 0x50 + DNR_Failed,
-	terrDN_NoDNSEntry = 0x50 + DNR_NoDNSEntry
+	terrDNR_NoDNSEntry = 0x50 + DNR_NoDNSEntry,
+	terrTimeout = 1
 };
 
 DownloadItem DownloadQueue[16];
@@ -137,9 +138,16 @@ void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error) {
 		subs[1] = item->selector ? item->selector : "";
 
 		switch(new_error) {
+			case terrTimeout:
+				AlertWindow(awPString, (Pointer)subs,
+					(Ref)"54~*0: Connection timeout.~^#6"
+				);
+				break;
 			case terrDNR_Failed:
-			case terrDN_NoDNSEntry:
-				AlertWindow(awPString, (Pointer)subs, (Ref)"54~*0: DNS error.~^#6");
+			case terrDNR_NoDNSEntry:
+				AlertWindow(awPString, (Pointer)subs,
+					(Ref)"54~*0: DNS error.~^#6"
+				);
 				break;
 		}
 	}
@@ -290,11 +298,14 @@ static unsigned OneItem(DownloadItem *item) {
 	unsigned ipid;
 	unsigned ok;
 
+	unsigned long tick;
 
 	ipid = item->ipid;
 	if (ipid) {
 		err = TCPIPStatusTCP(ipid, &sr);
 	}
+
+	tick = GetTick();
 
 
 	switch(item->state) {
@@ -330,6 +341,7 @@ static unsigned OneItem(DownloadItem *item) {
 				unsigned char *selector = item->selector;
 				unsigned char *query = item->query;
 				item->state = kStateReading;
+				item->tick = tick + 60 * 10; // bump the timeout.
 				if (selector)
 					err = TCPIPWriteTCP(ipid, selector+1, selector[0], 0, 0);
 				if (query) {
@@ -357,6 +369,7 @@ static unsigned OneItem(DownloadItem *item) {
 
 		case kStateReading:
 			if (sr.srRcvQueued) {
+				item->tick = tick + 60 * 10; // bump the timeout.
 				if (item->refNum) ok = ReadData(item);
 				else ok = ReadText(item);
 				if (!ok) return 0;
@@ -386,6 +399,11 @@ static unsigned OneItem(DownloadItem *item) {
 				return 0;
 			}
 			break;
+	}
+
+	if (tick > item->tick) {
+		CleanupItem(item, kStateError, terrTimeout);
+		return 0;
 	}
 
 	return 1;
@@ -445,7 +463,8 @@ static void BeginQueue(DownloadItem *item) {
 	} else {
 		TCPIPDNRNameToIP(item->host, &item->dnr);
 		item->state = kStateDNR;
-	}	
+	}
+	item->tick = GetTick() + 60 * 10; // 10-second timeout...
 }
 
 unsigned QueueURL(const char *cp, unsigned length) {
