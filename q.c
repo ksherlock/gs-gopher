@@ -59,7 +59,6 @@ typedef struct DownloadItem {
 enum {
 	terrDNR_Failed = 0x50 + DNR_Failed,
 	terrDNR_NoDNSEntry = 0x50 + DNR_NoDNSEntry,
-	terrTimeout = 1
 };
 
 DownloadItem DownloadQueue[16];
@@ -138,15 +137,32 @@ void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error) {
 		subs[1] = item->selector ? item->selector : "";
 
 		switch(new_error) {
-			case terrTimeout:
+
+			case tcperrUserTimeout:
+				// our timeout.
 				AlertWindow(awPString, (Pointer)subs,
-					(Ref)"54~*0: Connection timeout.~^#6"
+					(Ref)"54~*0\rConnection timeout.~^#6"
 				);
 				break;
+
+			case tcperrConRefused:
+				// RST to a SYN
+				AlertWindow(awPString, (Pointer)subs,
+					(Ref)"54~*0\rConnection refused.~^#6"
+				);
+				break;
+
+			case tcperrConReset:
+				// RST after established.
+				AlertWindow(awPString, (Pointer)subs,
+					(Ref)"54~*0\rConnection reset.~^#6"
+				);
+				break;
+
 			case terrDNR_Failed:
 			case terrDNR_NoDNSEntry:
 				AlertWindow(awPString, (Pointer)subs,
-					(Ref)"54~*0: DNS error.~^#6"
+					(Ref)"54~*0\rDNS error.~^#6"
 				);
 				break;
 		}
@@ -402,7 +418,7 @@ static unsigned OneItem(DownloadItem *item) {
 	}
 
 	if (tick > item->tick) {
-		CleanupItem(item, kStateError, terrTimeout);
+		CleanupItem(item, kStateError, tcperrUserTimeout);
 		return 0;
 	}
 
