@@ -181,8 +181,9 @@ void CleanupItem(DownloadItem *item, unsigned new_state, unsigned new_error) {
 }
 
 /* read data, write to the refnum */
+static char buffer[4096];
+
 static unsigned ReadData(DownloadItem *item) {
-	static char buffer[1024];
 	static rrBuff rr;
 	static srBuff sr;
 
@@ -195,7 +196,7 @@ static unsigned ReadData(DownloadItem *item) {
 	for(;;) {
 		unsigned i, j;
 
-		TCPIPPoll();
+		// TCPIPPoll();
 		TCPIPStatusTCP(ipid, &sr);
 
 		i = sizeof(buffer);
@@ -218,7 +219,6 @@ static unsigned ReadData(DownloadItem *item) {
 // trailing . not handled here.
 static unsigned ReadText(DownloadItem *item) {
 
-	static char buffer[1024];
 	static rrBuff rr;
 	static srBuff sr;
 
@@ -258,7 +258,7 @@ static unsigned ReadText(DownloadItem *item) {
 	for(;;) {
 		unsigned i, j;
 
-		TCPIPPoll();
+		// TCPIPPoll();
 		TCPIPStatusTCP(ipid, &sr);
 
 		i = sizeof(buffer);
