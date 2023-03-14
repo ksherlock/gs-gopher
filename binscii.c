@@ -232,14 +232,14 @@ int DecodeBINSCII(const uint8_t *ptr, long size) {
 
 
 	//expect it within the first 32k...
-	if (size < 18) return BS_NOT_BINSCII;
+	if (size < 18) return error(BS_NOT_BINSCII);
 
 	if (size >> 16) max = 0x8000;
 	else max = size - 18;
 	for (i = 0; i < max; ++i) {
 		c = ptr[i];
 		if (c == 'F' && prev == '\r') {
-			if (i + 18 >= size) return BS_NOT_BINSCII;
+			if (i + 18 >= size) return error(BS_NOT_BINSCII);
 
 			if (!memcmp(ptr + i, MAGIC, 19)) {
 				i += 19;
