@@ -243,10 +243,70 @@ void WindowChange(void) {
 	}
 }
 
-#if 0
 pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHit, word yHit, word param) {
 	word rv = 0;
-	menuRec *menu = *menuRecH;
+	MenuRec *menu = *menuRecH;
+
+#if 0
+	static struct {
+		unsigned type;
+		unsigned size;
+		unsigned height;
+		unsigned width;
+		unsigned char image[6];
+		unsigned char mask[6];
+	} icon = {
+		0x8000,
+		6, 3, 4,
+		{
+			0xc0, 0x3f,
+			0x00, 0x0f,
+			0xc0, 0x3f
+		},
+		{
+			0xff, 0xff,
+			0xff, 0xff,
+			0xff, 0xff
+		}
+	};
+#else
+	static struct {
+		unsigned type;
+		unsigned size;
+		unsigned height;
+		unsigned width;
+		unsigned char image[24];
+		unsigned char mask[24];
+	} icon = {
+		0x8000,
+		24, 8, 6,
+		{
+			0xF3, 0xFF, 0xFF, 
+			0xC0, 0xFF, 0xCF, 
+			0x00, 0x3F, 0xCF, 
+			0xF3, 0xFF, 0xCF, 
+			0xF3, 0xFF, 0xCF, 
+			0xF3, 0xFC, 0x00, 
+			0xF3, 0xFF, 0x03, 
+			0xFF, 0xFF, 0xCF,
+		},
+		{
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF, 
+			0xFF, 0xFF, 0xFF,
+		}
+	};
+#endif
+
+
+
+
+	unsigned x;
 
 	switch(message) {
 	case mDrawMsg:
@@ -259,9 +319,12 @@ pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHi
 		/* calculate menu size */
 		break;
 	case mDrawTitle:
-		SetBackColor(0xaaaa); // green
-		SetSolidBackPat(0xaaaa);
-		PaintRect(rectPtr);
+
+		EraseRect(rectPtr);
+		x = (unsigned)menu->titleName;
+		if (x) {
+			DrawIcon((Pointer)&icon, 0, rectPtr->h1 + 4, rectPtr->v1 + 2);
+		}
 		rv = 1; /* prevent normal title drawing code */
 		break;
 	case mDrawMItem:
@@ -273,7 +336,34 @@ pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHi
 
 	return rv;
 }
-#endif
+
+static MenuRec *ActivityMenu;
+void UpdateActivityMenu(unsigned status) {
+
+	ActivityMenu->titleName = (Pointer)status;
+	HiliteMenu(0, ActivityMenu->menuID);
+}
+
+MenuRecHndl MakeActivityMenu(void) {
+	MenuRecHndl h;
+	MenuRec *menu;
+
+	h = (MenuRecHndl)NewHandle(sizeof(MenuRec), MyID, attrLocked|attrFixed|attrNoSpec, 0);
+	if (h) {
+		menu = *h;
+		memset(menu, 0, sizeof(MenuRec));
+
+		// menuCustom means an empty menu will always draw.
+		// 
+		menu->menuID = 9;
+		menu->menuProc = MenuProc;
+		menu->menuFlag = /*menuCustom | */ menuDisabled | menuAllowCache;
+		menu->titleWidth = 20;
+		menu->titleName = (Pointer)0;
+		ActivityMenu = menu;
+	}
+	return h;
+}
 
 #pragma databank 1
 #pragma toolparms 1
@@ -474,6 +564,12 @@ static void Setup(void) {
 		InsertMenu(hMenu, kEditMID);
 	}
 
+	#if 1
+	{
+		MenuRecHndl m = MakeActivityMenu();
+		InsertMenu(m, kWindowMID);
+	}
+	#endif
 
 	FixMenuBar();
 	DrawMenuBar();

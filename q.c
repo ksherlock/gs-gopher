@@ -28,6 +28,7 @@ enum {
 char *SearchPrompt(char *name);
 int FilePrompt(GSString255 *name, unsigned ftype, unsigned atype);
 GSString255 *FileName(const char *path, word length);
+void UpdateActivityMenu(unsigned status);
 
 
 typedef struct DownloadItem {
@@ -449,6 +450,9 @@ void ProcessQueue(void) {
 
 		}
 	}
+	if (!Active) {
+		UpdateActivityMenu(0);
+	}
 }
 
 
@@ -481,6 +485,7 @@ static void BeginQueue(DownloadItem *item) {
 		item->state = kStateDNR;
 	}
 	item->tick = GetTick() + 60 * 10; // 10-second timeout...
+	UpdateActivityMenu(1);
 }
 
 unsigned QueueURL(const char *cp, unsigned length) {
