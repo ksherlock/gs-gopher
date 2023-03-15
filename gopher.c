@@ -245,6 +245,8 @@ void WindowChange(void) {
 	MenuUpdate(c);
 }
 
+#pragma toolparms 1
+#pragma databank 1
 pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHit, word yHit, word param) {
 	word rv = 0;
 	MenuRec *menu = *menuRecH;
@@ -338,6 +340,8 @@ pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHi
 
 	return rv;
 }
+#pragma toolparms 0
+#pragma databank 0
 
 static MenuRec *ActivityMenu;
 void UpdateActivityMenu(unsigned status) {
