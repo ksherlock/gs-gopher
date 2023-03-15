@@ -142,11 +142,17 @@ void NetworkUpdate(unsigned up) {
 // todo -- update for DAs.
 // todo -- copy should only be active if there's a text selection or list selection.
 
-void MenuUpdate(int type, unsigned flags) {
+void MenuUpdate(struct cookie *cookie) {
 
-	switch(type) {
-	case 0:
-		// front window invalid
+	static int prevMItem = -1;
+
+	if (prevMItem >= 0) {
+		CheckMItem(0, prevMItem);
+		prevMItem = -1;
+	}
+
+	if (!cookie) {
+
 		DisableMItem(kSaveItem);
 		DisableMItem(kCloseItem);
 		DisableMItem(kPageSetupItem);
@@ -165,9 +171,14 @@ void MenuUpdate(int type, unsigned flags) {
 
 		DisableMItem(kAddBookmarkItem);
 
+		return;
+	}
 
-		break;
-	case 1:
+	unsigned type = cookie->type;
+	unsigned flags = cookie->flags;
+
+	if (type == kGopherTypeIndex) {
+
 		// front window index
 		DisableMItem(kSaveItem);
 		EnableMItem(kCloseItem);
@@ -187,8 +198,7 @@ void MenuUpdate(int type, unsigned flags) {
 
 		EnableMItem(kAddBookmarkItem);
 
-		break;
-	case 2:
+	} else {
 		// front window text.
 		EnableMItem(kSaveItem);
 		EnableMItem(kCloseItem);
@@ -207,9 +217,10 @@ void MenuUpdate(int type, unsigned flags) {
 		HiliteMenu(0, kTextMID);
 
 		EnableMItem(kAddBookmarkItem);
-
-		break;
 	}
+
+	prevMItem = cookie->menuID + WindowBase;
+	CheckMItem(1, prevMItem);
 }
 
 void WindowChange(void) {
@@ -222,7 +233,7 @@ void WindowChange(void) {
 	PrevWin = win;
 
 	if (!win) {
-		MenuUpdate(0, 0);
+		MenuUpdate(NULL);
 	}
 
 	if (GetSysWFlag(win)) {
@@ -231,16 +242,7 @@ void WindowChange(void) {
 	}
 
 	c = (struct cookie *)GetWRefCon(win);
-	if (!c) {
-		MenuUpdate(0, 0);
-		return;
-	}
-
-	if (c->type == kGopherTypeIndex) {
-		MenuUpdate(1, c->flags);
-	} else {
-		MenuUpdate(2, c->flags);
-	}
+	MenuUpdate(c);
 }
 
 pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHit, word yHit, word param) {
