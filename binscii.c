@@ -253,6 +253,51 @@ int DecodeBINSCII(const uint8_t *ptr, long size) {
 	return error(BS_NOT_BINSCII);
 }
 
+#if 0
+int DecodeUUE(const uint8_t *ptr, long size) {
+	/* find the sentinel */
+	/* begin mode name .... end*/
+	/* begin-base64 mode name ... ==== */
+
+	int b64 = 0;
+
+	if (size < 9) return error(BS_NOT_BINSCII);
+
+	if (size >> 16) max = 0x8000;
+	else max = size - 9;
+	for (i = 0; i < max; ++i) {
+		c = ptr[i];
+		if (c == 'b' && prev == '\r') {
+			if (i + 9 >= size) return error(BS_NOT_BINSCII);
+
+			if (!memcmp(ptr + i, "begin", 5)) {
+				i += 5;
+				if (memcmp(ptr + i, "-base64 ", 8)) {
+					b64 = 1;
+					i += 8;
+					ptr += i;
+					size -= i;
+					return error(de_base(ptr + i, size));
+				}
+				else if (ptr[i] == ' ') {
+					b64 = 0;
+					i += 1;
+					ptr += i;
+					size -= i;
+					return error(de_uue(ptr + i, size));
+				} else {
+					prev = 'n';
+					continue;
+				}
+			}
+		}
+		prev = c;
+	}
+	return error(BS_NOT_BINSCII);
+
+}
+#endif
+
 #ifdef TEST
 
 const char file[] = 
