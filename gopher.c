@@ -526,7 +526,40 @@ Handle LoadFixedFont(void) {
 	return h;
 }
 
+Handle LoadResourceFont(unsigned familyID, unsigned size) {
+	Handle h;
+	FontID FF = {{ familyID, 0, size } };
+	FontStatRec fsr;
 
+	FindFontStats(FF, 0, 1, &fsr);
+	if (_toolErr || (fsr.resultStats & notFoundBit)) {
+
+		unsigned char *ptr;
+		int offset;
+		unsigned long resID = (familyID << 8) | size;
+
+		h = LoadResource(rFont, resID);
+		if (_toolErr) return NULL;
+		DetachResource(rFont, resID);
+
+		HLock(h);
+		ptr = *(unsigned char **)h;
+		offset = *ptr + 1;
+
+		AddFamily(familyID, ptr);
+
+		size = GetHandleSize(h) - offset; // skip pascal name
+
+		BlockMove(ptr + offset, ptr, size);
+		SetHandleSize(size, h);
+		AddFontVar((FontHndl)h, 0);
+		return h;
+
+	}
+	InstallFont(FF, 0);
+	if (_toolErr) return NULL;
+	return (Handle)GetFont();
+}
 
 
 static void Setup(void) {
