@@ -285,6 +285,16 @@ pascal word MenuProc(word message, MenuRecHndl menuRecH, Rect *rectPtr, word xHi
 		0x8000,
 		24, 8, 6,
 		{
+			#if 0
+			0b11110011, 0b11111111, 0b11111111,
+			0b11000000, 0b11111111, 0b11001111,
+			0b00000000, 0b00111111, 0b11001111,
+			0b11110011, 0b11111111, 0b11001111,
+			0b11110011, 0b11111111, 0b11001111,
+			0b11110011, 0b11111100, 0b00000000,
+			0b11110011, 0b11111111, 0b00000011,
+			0b11111111, 0b11111111, 0b11001111,
+			#endif
 			0xF3, 0xFF, 0xFF, 
 			0xC0, 0xFF, 0xCF, 
 			0x00, 0x3F, 0xCF, 
@@ -565,6 +575,55 @@ Handle LoadResourceFont(unsigned familyID, unsigned size) {
 	return (Handle)GetFont();
 }
 
+static void ApplyTheme(void) {
+
+	static ColorTable GreyScale = {
+		0x0000, 0x0555, 0x0aaa, 0x0fff,
+		0x0000, 0x0555, 0x0aaa, 0x0fff,
+		0x0000, 0x0555, 0x0aaa, 0x0fff,
+		0x0000, 0x0555, 0x0aaa, 0x0fff,
+	};
+
+	static ColorTable Standard = {
+		0x0000, 0x0f00, 0x00f0, 0x0fff,
+		0x0000, 0x000f, 0x0ff0, 0x0fff,
+		0x0000, 0x0f00, 0x00f0, 0x0fff,
+		0x0000, 0x000f, 0x0ff0, 0x0fff,
+	};
+
+	GrafPortPtr oldPort;
+
+
+
+
+
+	// erase left/right/top of the window frame.
+	oldPort = GetPort();
+	SetPort(GetMenuMgrPort());
+	SetPenSize(2, 1);
+	SetSolidPenPat(0x0f);
+	MoveTo(0, 11);
+	LineTo(0, 0);
+	LineTo(639-1, 0);
+	LineTo(639-1, 11);
+	SetPort(oldPort);
+
+	/* next theme! */
+	if (Theme == kThemeNeXT) {
+		SetColorTable(0, GreyScale);
+		Desktop(5, 0x400000aa);
+	}
+	if (Theme == kThemeMac) {
+		Desktop(5, 0x400002c3); // b/w checkerboard.
+	}
+	if (Theme == kThemeStandard) {
+		// standard desktop colors.
+		SetColorTable(0, Standard);
+		Desktop(5, 0x400000d0);
+	}
+
+
+}
 
 static void Setup(void) {
 
@@ -575,22 +634,6 @@ static void Setup(void) {
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
 	SetMenuBar(0);
 	FixAppleMenu(kAppleMID);
-
-
-	/* next theme! */
-	if (Theme == kThemeNeXT) {
-		ColorTable table = {
-			0x0000, 0x0555, 0x0aaa, 0x0fff,
-			0x0000, 0x0555, 0x0aaa, 0x0fff,
-			0x0000, 0x0555, 0x0aaa, 0x0fff,
-			0x0000, 0x0555, 0x0aaa, 0x0fff,
-		};
-		SetColorTable(0, table);
-		Desktop(5, 0x400000aa);
-	}
-	if (Theme == kThemeMac) {
-		Desktop(5, 0x400002c3); // b/w
-	}
 
 	if (HierarchicStartUp(MyID)) {
 		MenuRecHndl m;
@@ -613,14 +656,17 @@ static void Setup(void) {
 	FixMenuBar();
 	DrawMenuBar();
 
+#if 0
 	/* find the right edge of the menu bar */
 	MenuWidth = 0;
 	MenuWidth = GetMTitleStart();
 	for (i = kAppleMID; i <= kWindowMID; ++i)
 		MenuWidth += GetMTitleWidth(i);
-
+#endif
 
 	InitCursor();
+	ApplyTheme();
+
 	StartupQueue();
 
 	Icons[0] = (Pointer)GetIcon(kIconText); // text
