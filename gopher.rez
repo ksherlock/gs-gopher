@@ -778,13 +778,13 @@ resource rControlTemplate (kGopherIndex) {
 
 resource rControlTemplate (kGopherText) {
 	kGopherText,
-	{-1, -2, TextWindowHeight - 1, TextWindowWidth+1 },
+	{-1, -2, TextWindowHeight - 1, TextWindowWidth+2 },
 	editTextControl {
 		 {	/* optional Fields */
 			0x0, /* flags */
 			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr+FctlTellAboutSize+FctlIsMultiPart, /* more flags */
 			0x0, /* ref con */
-			fNoWordWrap+fGrowRuler+fSingleStyle+fReadOnly+fDrawBounds, /* text flags */
+			fNoWordWrap+fSingleStyle+fSingleFormat+fReadOnly+fDrawBounds, /* text flags */
 			{0xffff, 0xffff, 0xffff, 0xffff}, /* indent rect */
 			0xffffffff, /* horizontal bar */
 			0, // vertical amount
