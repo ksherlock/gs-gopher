@@ -779,6 +779,7 @@ unsigned OneLine(char *ptr, ListEntry *e){
 	if (c == '\r') return i+1;
 
 
+	++i;
 	port = 0;
 	for(;;++i) {
 		c = ptr[i];
