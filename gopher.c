@@ -31,8 +31,6 @@
 #include "q.h"
 #include "hierarchic.h"
 
-#define kTextMarginFudge 30
-
 unsigned Quit = 0;
 
 
@@ -248,27 +246,6 @@ void WindowChange(void) {
 }
 
 
-void WindowResize(GrafPortPtr win) {
-
-	struct text_cookie *cookie;
-	Handle teH;
-
-	// GrafPortPtr win = FrontWindow();
-	if (GetSysWFlag(win)) return;
-
-	// if this is a word-wrap text window, we need to adjust the ruler
-
-	cookie = (struct text_cookie *)GetWRefCon(win);
-
-	if (!cookie || cookie->type != kGopherTypeText) return;
-	if (!(cookie->flags & kFlagWrap)) return;
-
-	unsigned w = win->portRect.h2;
-	cookie->ruler.rightMargin = w - kTextMarginFudge;
-
-	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
-	TESetRuler(refIsPointer, (Ref)&cookie->ruler, teH);
-}
 
 #pragma toolparms 1
 #pragma databank 1
@@ -462,7 +439,6 @@ word FixedCharWidth = 6;
 word FixedCharHeight = 11;
 
 
-#if 0
 struct TEPixelRuler {
    Word leftMargin;
    Word leftIndent;
@@ -473,9 +449,7 @@ struct TEPixelRuler {
    LongWord userData;
    Word tabType;
    Word tabTerminator;
-}
-#endif
-TEPixelRuler FixedRuler = {
+} FixedRuler = {
 	0, 0, 640, leftJust,
 	0, 0, 0, stdTabs, 6 * 8
 };
@@ -1323,10 +1297,8 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 
 	(**((TERecord **)teH)).textFlags &= ~fReadOnly;
 
-	memcpy(&cookie->ruler, &FixedRuler, sizeof(FixedRuler));
-
 	TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &FixedStyle, teH);
-	TESetRuler(refIsPointer, (Ref)&cookie->ruler, teH);
+	TESetRuler(refIsPointer, (Ref)&FixedRuler, teH);
 	TESetText(teDataIsTextBlock | teTextIsPtr, (Ref)text, length, 0, NULL, teH);
 
 	(**((TERecord **)teH)).textFlags |= fReadOnly;
@@ -1554,6 +1526,8 @@ void DoCopy(void) {
 
 void ToggleWrapText(void) {
 
+#define kTextMarginFudge 30
+
 	GrafPortPtr win = FrontWindow();
 	if (!win) return;
 
@@ -1566,30 +1540,35 @@ void ToggleWrapText(void) {
 	TERecord *tr = *(TERecord **)teH;
 
 	if (cookie->flags & kFlagWrap) {
+		tr->textFlags &= ~fGrowRuler;
 		tr->textFlags |= fNoWordWrap;
-		tr->textFlags &= ~fReadOnly;
 		SetMItemMark(0, kWrapTextItem);
 		cookie->flags &= ~kFlagWrap;
 
-		cookie->ruler.rightMargin = 640; // doesn't matter....
+		FixedRuler.rightMargin = 640; // doesn't matter....
 
 	} else {
+
+		// fGrowRuler adjusts the right margin based on the 
+		// difference in window size so we need to set it here.
+		tr->textFlags |= fGrowRuler;
 		tr->textFlags &= ~fNoWordWrap;
-		tr->textFlags &= ~fReadOnly;
 		CheckMItem(1, kWrapTextItem);
 		cookie->flags |= kFlagWrap;
 
 		unsigned w = win->portRect.h2;
-		cookie->ruler.rightMargin = w - kTextMarginFudge;
+		FixedRuler.rightMargin = w - kTextMarginFudge;
 	}
 
-	TESetRuler(refIsPointer, (Ref)&cookie->ruler, teH);
+	TESetRuler(refIsPointer, (Ref)&FixedRuler, teH);
 
 	// call TEStyleChange to force a re-layout.
 	// TEStyleChange(teReplaceFont | teReplaceSize|teReplaceAttributes, &FixedStyle, teH);
 
 	tr = *(TERecord **)teH;
-	tr->textFlags |= fReadOnly;
+	// tr->textFlags |= fReadOnly;
+
+	FixedRuler.rightMargin = 640;
 }
 
 void DoMenu(void) {
@@ -1821,11 +1800,12 @@ void EventLoop(void) {
 				OpenIndex(*handle);
 			}
 
+#if 0
 			if (event.wmTaskData4 == kGopherText && (word)event.wmTaskData3 == 0x0084) {
 				// check for text edit grow box events.
 				WindowResize((GrafPortPtr)event.wmTaskData);
 			}
-
+#endif
 			break;
 		}
 		case app4Evt:

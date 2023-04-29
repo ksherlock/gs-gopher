@@ -45,18 +45,6 @@ typedef struct ListEntry {
 } ListEntry;
 
 
-typedef struct TEPixelRuler {
-   Word leftMargin;
-   Word leftIndent;
-   Word rightMargin;
-   Word just;
-   Word extraLS;
-   Word flags;
-   LongWord userData;
-   Word tabType;
-   Word tabTerminator;
-} TEPixelRuler;
-
 
 // window refcon
 typedef struct cookie {
@@ -72,7 +60,6 @@ typedef struct text_cookie {
 	unsigned flags;
 	char *title;
 	//
-	TEPixelRuler ruler;
 	char data[1];
 } text_cookie;
 
