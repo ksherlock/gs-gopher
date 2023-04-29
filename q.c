@@ -195,7 +195,7 @@ static unsigned ReadData(DownloadItem *item) {
 	ioDCB.refNum = item->refNum;
 
 	for(;;) {
-		unsigned i, j;
+		unsigned i;
 
 		// TCPIPPoll();
 		TCPIPStatusTCP(ipid, &sr);
@@ -465,7 +465,6 @@ typedef struct range {
 static void BeginQueue(DownloadItem *item) {
 	if (TCPIPValidateIPString(item->host)) {
 		cvtRec cvt;
-		unsigned err;
 
 		TCPIPConvertIPToHex(&cvt, item->host);
 		item->dnr.DNRstatus = DNR_OK;
@@ -728,7 +727,6 @@ unsigned QueueEntry(struct ListEntry *e) {
 unsigned OneLine(char *ptr, ListEntry *e){
 
 	unsigned i = 0;
-	unsigned type;
 	unsigned c;
 	unsigned port;
 	unsigned j;
@@ -777,7 +775,6 @@ unsigned OneLine(char *ptr, ListEntry *e){
 	}
 	ptr[j] = i - j - 1;
 	if (c == '\r') return i+1;
-
 
 	++i;
 	port = 0;
@@ -905,7 +902,6 @@ void TextComplete(DownloadItem *item) {
 	char *ptr = *(char **)h;
 	char *cp;
 	text_cookie *cookie;
-	unsigned i;
 	unsigned tlen;
 
 	// check for a trailing .\r

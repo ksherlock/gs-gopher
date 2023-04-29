@@ -495,7 +495,6 @@ word FindUnusedFontID(void) {
 
 Handle LoadFixedFont(void) {
 	Handle h;
-	Handle h2;
 	unsigned char *ptr;
 	unsigned long size;
 	struct FontHeader *fh;
@@ -627,8 +626,6 @@ static void ApplyTheme(void) {
 
 static void Setup(void) {
 
-	Handle h;
-	unsigned i;
 	/* menu bars */
 
 	SetSysBar(NewMenuBar2(2, kMenuBarID, 0));
@@ -1313,6 +1310,7 @@ void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
 #pragma databank 1
 void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 
+#if 0
 	static unsigned char DimMask[] = {
 		0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa,
 	};
@@ -1320,7 +1318,8 @@ void pascal ListDraw(Rect *rectPtr, ListEntry *entry, Handle listHandle) {
 	static unsigned char NorMask[] = {
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	};
-
+#endif
+	
 	void *iconPtr = nil;
 	unsigned width = rectPtr->h2 - rectPtr->h1 - 32;
 
