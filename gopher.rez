@@ -376,7 +376,7 @@ resource rMenuItem (kPreferences, nocrossbank){
 	",",
 	",",
 	0,
-	0x8000 | rMIDisabled,
+	0x8000,
 	kPreferences
 };
 
@@ -1616,6 +1616,189 @@ resource rControlTemplate (kNetworkDisconnect) {
 resource rPString(kNetworkDisconnect) {
 	"Disconnect"
 };
+
+
+
+// preferences
+
+#define kPrefsHeight 60
+#define kPrefsWidth 380
+resource rWindParam1 (kPrefsWindow) {
+	0x20A0,
+	0x0,
+	0x0,
+	{0, 0, 0, 0},
+	0x0,
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0x0,
+	0,
+	{60, 130, 60+kPrefsHeight, 130+kPrefsWidth},
+	infront,
+	kPrefsWindow,
+	0x9
+};
+
+resource rControlList(kPrefsWindow) {
+	{
+		kPrefsThemeLabel,
+		KPrefsTheme,
+		kPrefsSearchLabel,
+		// kPrefsSearch,
+		kPrefsSave,
+		kPrefsCancel
+	}
+};
+
+
+resource rControlTemplate (kPrefsThemeLabel) {
+	kPrefsThemeLabel,
+	{10, 10, 20, 120 },
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kPrefsThemeLabel,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kPrefsThemeLabel) {
+	"Theme"
+};
+
+resource rControlTemplate (kPrefsTheme) {
+	kPrefsTheme,
+	{10, 122, 0, 0},
+	PopUpControl {
+		 {	/* optional Fields */
+			fType2PopUp + fDontDrawTitle, // flags
+			FctlProcNotPtr + refIsResource, // more flags
+			0x0, // refcon
+			0, // title width
+			kPrefsTheme, //menu ref
+			0x0100, // initial value (item ID)
+			0x0 // color table.
+		}
+	}
+};
+
+resource rMenu(kPrefsTheme) {
+	1,
+	0xA000,
+	kPrefsTheme,
+	{
+		kMenuIIgs,
+		kMenuNeXT,
+		kMenuMacOS
+	}
+};
+
+resource rMenuItem (kMenuIIgs, nocrossbank){
+    0x0100, // item id
+    "",
+    "",
+    0,
+    0x8000,
+    kMenuIIgs
+};
+
+resource rMenuItem (kMenuNeXT, nocrossbank){
+    0x0101,
+    "",
+    "",
+    0,
+    0x8000,
+    kMenuNeXT
+};
+
+resource rMenuItem (kMenuMacOS, nocrossbank){
+    0x0102, // item id
+    "",
+    "",
+    0,
+    0x8000,
+    kMenuMacOS
+};
+
+
+resource rPString(kPrefsTheme) { "Theme" };
+resource rPString(kMenuIIgs) { "IIgs" };
+resource rPString(kMenuNeXT) { "NeXT" };
+resource rPString(kMenuMacOS) { "MacOS" };
+
+resource rControlTemplate (kPrefsSearchLabel) {
+	kPrefsSearchLabel,
+	{26, 10, 36, 120 },
+	statTextControl {
+		 {	/* optional Fields */
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kPrefsSearchLabel,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kPrefsSearchLabel) {
+	"Search Engine"
+};
+
+
+resource rControlTemplate (kPrefsSave) {
+	kPrefsSave,
+	{kPrefsHeight - 4 - 13, kPrefsWidth - 10 - 90, kPrefsHeight-4, kPrefsWidth - 10},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x3,
+			FctlProcNotPtr + FctlWantsEvents + refIsResource,
+			0x0,
+			kPrefsSave,
+			0x0,
+			{
+				"\n",
+				"\n",
+				0x0100,
+				0x0100
+			}
+		}
+	}
+};
+
+resource rPString(kPrefsSave) {
+	"Save"
+};
+
+resource rControlTemplate (kPrefsCancel) {
+	kPrefsCancel,
+	{kPrefsHeight - 4 - 13, 10, kPrefsHeight-4, 10 + 90},
+	SimpleButtonControl {
+		 {	/* optional Fields */
+			0x2,
+			FctlProcNotPtr + FctlWantsEvents + refIsResource,
+			0x0,
+			kPrefsCancel,
+			0x0,
+			{
+				"\$1b",
+				"\$1b",
+				0x0,
+				0x0
+			}
+		}
+	}
+};
+
+resource rPString(kPrefsCancel) {
+	"Cancel"
+};
+
 
 
 read rFont(1) "resources/Monte.Carlo.11";

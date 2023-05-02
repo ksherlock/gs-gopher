@@ -96,6 +96,18 @@
 #define kNetworkConnect kNetworkWindow+5
 #define kNetworkDisconnect kNetworkWindow+6
 
+#define kPrefsSave kPrefsWindow+1
+#define kPrefsCancel kPrefsWindow+2
+#define kPrefsTheme kPrefsWindow+3
+#define kPrefsThemeLabel kPrefsWindow+4
+#define kPrefsSearch kPrefsWindow+5
+#define kPrefsSearchLabel kPrefsWindow+6
+
+#define kMenuIIgs kPrefsWindow + 20
+#define kMenuNeXT kPrefsWindow + 21
+#define kMenuMacOS kPrefsWindow + 22
+
+
 #define kIconText 1
 #define kIconBinary 2
 #define kIconDocument 3

@@ -798,14 +798,54 @@ void DoAbout(void) {
 		id = DoModalWindow(&event, NULL, (VoidProcPtr)SimpleEventHook, (VoidProcPtr)SimpleBeepProc, flags);
 		#undef flags
 
-		if (id == kAboutButton) break;
 		if (EndDialog) break;
+		if (id == kAboutButton) break;
 
 		ProcessQueue();
 	}
 
 	CloseWindow(shadow);
 	CloseWindow(win);
+}
+
+void DoPrefs(void) {
+
+	GrafPortPtr win;
+	GrafPortPtr shadow;
+	long id;
+
+	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kPrefsWindow, rWindParam1);
+
+	EndDialog = 0;
+
+	SetCtlValueByID(0x100 | Theme, win, kPrefsTheme);
+
+	shadow = CreateShadowWindow(win);
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc
+		id = DoModalWindow(&event, NULL, (VoidProcPtr)SimpleEventHook, (VoidProcPtr)SimpleBeepProc, flags);
+		#undef flags
+
+		if (EndDialog) break;
+
+		if (id == kPrefsSave)
+			break;
+
+		if (id == kPrefsCancel)
+			break;
+
+		if (id == kPrefsTheme) {
+			CtlRecHndl h = (CtlRecHndl)event.wmTaskData2;
+			Theme = GetCtlValue(h) & 0x0f;
+			ApplyTheme();
+		}
+
+		ProcessQueue();
+	}
+
+	CloseWindow(shadow);
+	CloseWindow(win);
+
 }
 
 
@@ -1605,6 +1645,9 @@ void DoMenu(void) {
 
 		case kAbout:
 			DoAbout();
+			break;
+		case kPreferences:
+			DoPrefs();
 			break;
 		case kOpenItem:
 			DoOpen();
