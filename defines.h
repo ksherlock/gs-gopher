@@ -115,3 +115,8 @@
 #define kIconFolder 5
 #define kIconFolderOpen 6
 #define kIconSearch 7
+
+
+// controls
+
+#define	LinkCtrlRID		0x00700000

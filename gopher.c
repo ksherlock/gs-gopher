@@ -813,6 +813,17 @@ void DoPrefs(void) {
 	GrafPortPtr win;
 	GrafPortPtr shadow;
 	long id;
+	Handle h;
+
+	// switch the resource type...
+	h = LoadResource(rControlTemplate, kPrefsSearch);
+	if (h) {
+		// load it and update the proc ref here ; NewWindow2 should use this template
+		ControlTemplate *temp;
+		HLock(h);
+		temp = *(ControlTemplate **)h;
+		temp->procRef = LinkCtrlRID;
+	}
 
 	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kPrefsWindow, rWindParam1);
 
@@ -838,6 +849,10 @@ void DoPrefs(void) {
 			CtlRecHndl h = (CtlRecHndl)event.wmTaskData2;
 			Theme = GetCtlValue(h) & 0x0f;
 			ApplyTheme();
+		}
+
+		if (id == kPrefsSearch) {
+			// url window to edit...
 		}
 
 		ProcessQueue();

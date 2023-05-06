@@ -21,6 +21,10 @@ gopher: $(OBJS) $(ROBJ)
 	$(COPYFORK) $(ROBJ) $@ -r
 	$(CHTYP) -t s16 -a 56071 $@
 
+
+linkctrl : o/linkctrl.o
+	$(CC) $(LDFLAGS) -o $@ $<
+
 .PHONY: clean
 clean:
 	$(RM) gopher $(OBJS) $(ROBJ)
@@ -37,7 +41,7 @@ o/binscii.o : binscii.c
 o/crc.o : crc.asm crc.mac
 
 
-o/gopher.r: gopher.rez defines.h
+o/gopher.r: gopher.rez defines.h linkctrl
 
 o/q.o: q.c q.h
 
@@ -47,6 +51,9 @@ o/%.r : %.rez | o
 
 o/%.o : %.c | o
 	$(CC) -c $(CFLAGS) -o $@ $<
+
+%.mac : %.asm util.mac
+	iix macgen $< $@ 13:AInclude:M16.= 13:ORCAInclude:M16.= util.mac
 
 o/%.o : %.asm | o
 	$(CC) -c $(ASFLAGS) -o $@ $<

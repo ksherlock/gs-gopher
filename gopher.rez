@@ -1647,7 +1647,7 @@ resource rControlList(kPrefsWindow) {
 		kPrefsThemeLabel,
 		KPrefsTheme,
 		kPrefsSearchLabel,
-		// kPrefsSearch,
+		kPrefsSearch,
 		kPrefsSave,
 		kPrefsCancel
 	}
@@ -1674,7 +1674,7 @@ resource rTextForLETextBox2(kPrefsThemeLabel) {
 
 resource rControlTemplate (kPrefsTheme) {
 	kPrefsTheme,
-	{10, 122, 0, 0},
+	{10, 124, 0, 0},
 	PopUpControl {
 		 {	/* optional Fields */
 			fType2PopUp + fDontDrawTitle, // flags
@@ -1751,6 +1751,27 @@ resource rTextForLETextBox2(kPrefsSearchLabel) {
 };
 
 
+resource rControlTemplate (kPrefsSearch) {
+	kPrefsSearch,
+	{26, 124, 36, kPrefsWidth - 10 },
+	statTextControl {
+		 {	/* optional Fields */
+			fSquishText + fBlastText,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kPrefsSearch,
+			0,
+			leftJust
+		}
+	}
+};
+resource rTextForLETextBox2(kPrefsSearch) {
+	//TBForeColor TBColor1
+	//TBBackColor TBColorF
+	"gopher.floodgap.com/7/v2/vs"
+};
+
+
 resource rControlTemplate (kPrefsSave) {
 	kPrefsSave,
 	{kPrefsHeight - 4 - 13, kPrefsWidth - 10 - 90, kPrefsHeight-4, kPrefsWidth - 10},
@@ -1803,3 +1824,5 @@ resource rPString(kPrefsCancel) {
 
 read rFont(1) "resources/Monte.Carlo.11";
 read rFont((0xFFFD << 8) | 9) "resources/Chicago.09";
+
+read rCtlDefProc (LinkCtrlRID, fixed, convert) "linkctrl";

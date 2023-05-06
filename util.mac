@@ -1,0 +1,66 @@
+ macro
+&lab stzl &address
+ stz &address
+ stz &address+2
+ mend
+ macro
+&lab plax
+&lab pla
+ plx
+ mend
+ macro
+&lab ldax &address,&off
+ lclc &c
+&lab anop
+&c amid &address,1,1
+ aif "&c"="[",.deref
+ aif "&c"="#",.imm
+ lda &address
+ ldx &address+2
+ mexit
+.deref
+ mexit
+.imm
+ aif "&address"="0",.imm0
+&address amid &address,2,l:&address-1
+ lda #&address
+ ldx #^&address
+ mexit
+.imm0
+ lda #0
+ tax
+ mexit
+.deref
+&address amid &address,2,l:&address-2
+ aif c:&off=0,.deref0
+ aif "&off"="y",.derefy
+&c amid &off,1,1
+ aif "&c"<>"#",.derefldy
+ ldy &off+2
+ ago .deref2
+.derefldy
+ ldy &off
+.derefy
+ iny
+ iny
+.deref2
+ lda [&address],y
+ tax
+ dey
+ dey
+ lda [&address],y
+ mexit
+.deref0
+ ldy #2
+ lda [&address],y
+ tax
+ lda [&address]
+ mend
+ macro
+&lab stax &address
+ lclc &c
+&lab anop
+&c amid &address,1,1
+ sta &address
+ stx &address+2
+ mend
