@@ -487,6 +487,62 @@ static void BeginQueue(DownloadItem *item) {
 	UpdateActivityMenu(1);
 }
 
+int AnalyzeURL(const char *cp, unsigned length) {
+
+	//returns url type, -1 on error.
+
+	unsigned st = 0;
+	int type = 1;
+	unsigned port = 0;
+	unsigned host = 0;
+	unsigned i;
+
+	st = 0;
+	if (length >= 9 && !memcmp(cp, "gopher://", 9)) {
+		cp += 9;
+		length -= 9;
+	}
+
+	for (i = 0; i < length; ++i) {
+		unsigned c = cp[i];
+		switch(st) {
+			case 0:
+				if (c == '/') {
+					if (!host) return -1;
+					st = 3;
+				}
+				else if (c == ':') {
+					if (!host) return -1;
+					st = 2;
+				}
+				host = 1;
+				break;
+
+			case 2:
+				// port
+				if (isdigit(c)) {
+					port = 1; // just need to know it exists.
+				}
+				else if (c == '/') {
+					// catches http://
+					if (!port) return -1;
+					st = 3;
+				} else return -1;
+				break;
+
+			case 3:
+				// type
+				type = c;
+				return type;
+				break;
+		}
+	}
+
+	return type;
+
+}
+
+
 unsigned QueueURL(const char *cp, unsigned length) {
 
 	// leading gopher:// is optional.
@@ -540,6 +596,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 				}
 				break;
 
+#if 0
 			case 1:
 				// host
 				if (c == '/') {
@@ -552,7 +609,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 					st = 2;
 				}
 				break;
-
+#endif
 			case 2:
 				// port
 				if (isdigit(c)) {

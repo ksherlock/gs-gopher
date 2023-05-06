@@ -8,4 +8,6 @@ void ProcessQueue(void);
 unsigned QueueURL(const char *cp, unsigned length);
 unsigned QueueEntry(struct ListEntry *e);
 
+int AnalyzeURL(const char *cp, unsigned length);
+
 #endif
