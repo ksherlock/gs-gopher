@@ -41,6 +41,7 @@ enum {
 };
 
 unsigned Theme = kThemeStandard;
+char SearchURL[256];
 
 const char *ReqName = "\pTCP/IP~kelvin~gopher~";
 
@@ -58,6 +59,12 @@ GrafPortPtr Windows[kMaxWindows];
 unsigned WindowBits = 0;
 
 unsigned MenuWidth = 0;
+
+
+
+unsigned EditSearchURL(void);
+void SetControlTextByID(GrafPortPtr win, Long id, char *text);
+
 
 #pragma toolparms 1
 #pragma databank 1
@@ -615,6 +622,7 @@ static void ApplyTheme(void) {
 		Desktop(5, 0x400000aa);
 	}
 	if (Theme == kThemeMac) {
+		SetColorTable(0, Standard);
 		Desktop(5, 0x400002c3); // b/w checkerboard.
 	}
 	if (Theme == kThemeStandard) {
@@ -689,6 +697,10 @@ static void Setup(void) {
 	SystemFont = (Handle)GetFont();
 	FixedFont = LoadFixedFont();
 	SetFont((FontHndl)SystemFont);
+
+
+	memcpy(SearchURL, "\pgopher.floodgap.com/7/v2/vs", 28);
+
 }
 
 Pointer IconForType(unsigned type) {
@@ -810,10 +822,18 @@ void DoAbout(void) {
 
 void DoPrefs(void) {
 
+	unsigned oldTheme;
+	static char oldSearchURL[256];
+
 	GrafPortPtr win;
 	GrafPortPtr shadow;
 	long id;
 	Handle h;
+	unsigned changes = 0;
+
+
+	oldTheme = Theme;
+	memcpy(oldSearchURL, SearchURL, 256);
 
 	// switch the resource type...
 	h = LoadResource(rControlTemplate, kPrefsSearch);
@@ -830,6 +850,7 @@ void DoPrefs(void) {
 	EndDialog = 0;
 
 	SetCtlValueByID(0x100 | Theme, win, kPrefsTheme);
+	SetControlTextByID(win, kPrefsSearch, SearchURL);
 
 	shadow = CreateShadowWindow(win);
 	for(;;) {
@@ -842,17 +863,29 @@ void DoPrefs(void) {
 		if (id == kPrefsSave)
 			break;
 
-		if (id == kPrefsCancel)
+		if (id == kPrefsCancel) {
+			if (changes & 1) {
+				Theme = oldTheme;
+				ApplyTheme();
+			}
+			if (changes & 2) {
+				memcpy(SearchURL, oldSearchURL, 256);
+			}
 			break;
+		}
 
 		if (id == kPrefsTheme) {
 			CtlRecHndl h = (CtlRecHndl)event.wmTaskData2;
 			Theme = GetCtlValue(h) & 0x0f;
 			ApplyTheme();
+			changes |= 1;
 		}
 
 		if (id == kPrefsSearch) {
-			// url window to edit...
+			if (EditSearchURL()) {
+				changes |= 2;
+				SetControlTextByID(win, kPrefsSearch, SearchURL);
+			}
 		}
 
 		ProcessQueue();
@@ -869,9 +902,9 @@ void SetControlTextByID(GrafPortPtr win, Long id, char *text) {
 		// we can't just set the title, we also have to swap from resource to pointer and set the length.
 		CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
 		if (ctrlH) {
+			SetCtlTitle(text+1, (Handle)ctrlH);
 			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH);
 			SetCtlValue(*text, ctrlH);
-			SetCtlTitle(text+1, (Handle)ctrlH);
 		}
 	}
 }
@@ -951,6 +984,79 @@ void DoNetwork(void) {
 	CloseWindow(win);
 }
 
+
+unsigned EditSearchURL(void) {
+
+	static char text[256];
+	// static URLComponents uc;
+
+	CtlRecHndl ctrlH;
+	LERecHndl leH;
+	unsigned ok = 0;
+	int type;
+
+	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kURLWindow, rWindParam1);
+
+	GrafPortPtr shadow = CreateShadowWindow(win);
+
+	ctrlH = GetCtlHandleFromID(win, kGopherURL);
+	leH = (LERecHndl)GetCtlTitle(ctrlH);
+
+	LESetText(SearchURL + 1, *SearchURL, leH);
+
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
+		// DoModalWindow(&event, NULL, (VoidProcPtr)0x80000000, (VoidProcPtr)-1, flags);
+		DoModalWindow(&event, NULL, (VoidProcPtr)OpenEventHook, (VoidProcPtr)-1, flags);
+		#undef flags
+		// break on return, esc (apple-. converted to esc)
+
+		if (event.what == app4Evt) {
+
+			unsigned quit = 0;
+			switch((unsigned)event.message) {
+				case kOpenAppleA:
+					// select-all
+					LESetSelect(0, 256, leH);
+					break;
+				case kOpenControlA:
+					LESetSelect(0, 0, leH);
+					break;
+				case kOpenControlE:
+					LESetSelect(256, 256, leH);
+					break;
+				case kOpenEscape:
+					quit = 1;
+					break;
+				case kOpenReturn:
+					GetLETextByID(win, kGopherURL, (StringPtr)text);
+					if (!text[0]) break;
+
+					type = AnalyzeURL(text + 1, *text);
+					if (type == kGopherTypeSearch) {
+
+						memcpy(SearchURL, text, text[0]+1);
+						ok = 1;
+						quit = 1;
+						break;
+					}
+					// should probably do a batter job of warning...
+					SysBeep2(sbBadInputValue);
+					break;
+
+			}
+			if (quit) break;
+		}
+
+		if (event.what == nullEvt) {
+			ProcessQueue();
+		}
+	}
+	CloseWindow(shadow);
+	CloseWindow(win); // or just hide so url is retained?
+	InitCursor(); /* reset possible I-beam cursor */
+	return ok;
+}
 
 
 void DoOpen(void) {
