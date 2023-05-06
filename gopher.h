@@ -25,6 +25,7 @@ enum {
 	kGopherTypeInfo = 'i',
 	kGopherTypeError = '3',
 	kGopherTypeSearch = '7',
+	kGopherTypeBinary = '9',
 };
 
 enum {

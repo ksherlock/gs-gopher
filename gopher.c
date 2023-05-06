@@ -50,7 +50,7 @@ unsigned MyID;
 MenuRecHndl hMenu = NULL;
 
 
-static Pointer Icons[4];
+static Pointer Icons[5];
 
 #define kMaxWindows 16
 
@@ -707,7 +707,7 @@ Pointer IconForType(unsigned type) {
 	switch(type) {
 		case kGopherTypeText: return Icons[0]; /* text */
 		case kGopherTypeIndex: return Icons[1]; /* directory/index */
-		case '9': return Icons[2]; /* binary */
+		case kGopherTypeBinary: return Icons[2]; /* binary */
 		case kGopherTypeSearch: return Icons[4];
 		case kGopherTypeInfo: /* informational */
 		case kGopherTypeError: /* error */
