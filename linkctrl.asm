@@ -180,6 +180,18 @@ link_draw	private
 	~SetBackColor #$ffff
 
 
+! erase the old rectangle...
+	lda #octlRect
+	clc
+	adc control
+	tax
+	lda #0
+	adc control+2
+	pha
+	phx
+	_EraseRect
+
+
 ! left edge
 	ldy #octlRect+2
 	lda [control],y

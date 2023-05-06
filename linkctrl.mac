@@ -19,6 +19,11 @@
  jsl $E10000
  MEND
  MACRO
+&lab _EraseRect
+&lab ldx #$5504
+ jsl $E10000
+ MEND
+ MACRO
 &lab _GetForeColor
 &lab ldx #$A104
  jsl $E10000
@@ -57,12 +62,6 @@
  jsl $E10000
  mend
  macro
-&l ~DrawChar &p1
-&l ph2 &p1
- ldx #$A404
- jsl $E10000
- mend
- macro
 &l ~SetBackColor &p1
 &l ph2 &p1
  ldx #$A204
@@ -78,12 +77,6 @@
 &l ~SetForeColor &p1
 &l ph2 &p1
  ldx #$A004
- jsl $E10000
- mend
- macro
-&l ~SetTextMode &p1
-&l ph2 &p1
- ldx #$9C04
  jsl $E10000
  mend
  macro
