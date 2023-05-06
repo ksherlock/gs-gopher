@@ -1766,8 +1766,6 @@ resource rControlTemplate (kPrefsSearch) {
 	}
 };
 resource rTextForLETextBox2(kPrefsSearch) {
-	//TBForeColor TBColor1
-	//TBBackColor TBColorF
 	"gopher.floodgap.com/7/v2/vs"
 };
 
