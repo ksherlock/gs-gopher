@@ -137,10 +137,12 @@ GrafPortPtr CreateShadowWindow(GrafPortPtr parent) {
 void NetworkUpdate(unsigned up) {
 	if (up) {
 		EnableMItem(kOpenItem);
+		EnableMItem(kSearchItem);
 		EnableMItem(kDisconnectItem);
 		DisableMItem(kConnectItem);
 	} else {
 		DisableMItem(kOpenItem);
+		DisableMItem(kSearchItem);
 		DisableMItem(kDisconnectItem);
 		EnableMItem(kConnectItem);
 	}
@@ -1032,7 +1034,7 @@ unsigned EditSearchURL(void) {
 					GetLETextByID(win, kGopherURL, (StringPtr)text);
 					if (!text[0]) break;
 
-					type = AnalyzeURL(text + 1, *text);
+					type = AnalyzeURL(text);
 					if (type == kGopherTypeSearch) {
 
 						memcpy(SearchURL, text, text[0]+1);
@@ -1112,7 +1114,7 @@ void DoOpen(void) {
 
 					// TODO -- should indicate if it's a binary item
 					// so we can save it to a file....
-					ok = QueueURL(text + 1, text[0]);
+					ok = QueueURL(text, NULL);
 					if (ok) {
 						quit = 1;
 						break;
@@ -1227,6 +1229,18 @@ GSString255 *FileName(const char *path, word length) {
 	memcpy(name->text, path + i, nlen);
 	return name;
 }
+
+// from the Search... menu.
+void DoSearch(void) {
+
+	if (!SearchURL[0]) return;
+
+	char *q = SearchPrompt("\pSearch");
+	if (q)
+		QueueURL(SearchURL, q);
+}
+
+
 
 /*
  * return a file descriptor, 0 if canceled.
@@ -1773,6 +1787,10 @@ void DoMenu(void) {
 		case kOpenItem:
 			DoOpen();
 			break;
+		case kSearchItem:
+			DoSearch();
+			break;
+
 		case kQuitItem:
 			Quit = 1;
 			break;

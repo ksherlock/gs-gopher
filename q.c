@@ -487,7 +487,7 @@ static void BeginQueue(DownloadItem *item) {
 	UpdateActivityMenu(1);
 }
 
-int AnalyzeURL(const char *cp, unsigned length) {
+int AnalyzeURL(const char *cp) {
 
 	//returns url type, -1 on error.
 
@@ -496,6 +496,12 @@ int AnalyzeURL(const char *cp, unsigned length) {
 	unsigned port = 0;
 	unsigned host = 0;
 	unsigned i;
+	unsigned length;
+
+	if (!cp) return -1;
+	length = *cp;
+	++cp;
+	if (!length) return -1;
 
 	st = 0;
 	if (length >= 9 && !memcmp(cp, "gopher://", 9)) {
@@ -539,11 +545,11 @@ int AnalyzeURL(const char *cp, unsigned length) {
 	}
 
 	return type;
-
 }
 
 
-unsigned QueueURL(const char *cp, unsigned length) {
+// cp and query are p-strings.
+unsigned QueueURL(const char *cp, const char *query) {
 
 	// leading gopher:// is optional.
 	// any other scheme is an error.
@@ -558,12 +564,17 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	unsigned st;
 	unsigned extra;
 	char *p;
-	char *query = NULL;
 	unsigned refNum = 0;
+	unsigned length;
 
 
 	unsigned mask;
 	DownloadItem *item = DownloadQueue;
+
+	if (!cp) return 0;
+	length = *cp;
+	++cp;
+
 
 	// find an empty entry.
 	if (Active == -1) return 0;
@@ -572,6 +583,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		if (!(Active & mask)) break;
 	}
 	memset(item, 0, sizeof(*item));
+
 
 
 
@@ -596,20 +608,6 @@ unsigned QueueURL(const char *cp, unsigned length) {
 				}
 				break;
 
-#if 0
-			case 1:
-				// host
-				if (c == '/') {
-					host.length = i - host.location;
-					st = 3;
-				}
-				else if (c == ':') {
-					host.length = i - host.location;
-					port = 0;
-					st = 2;
-				}
-				break;
-#endif
 			case 2:
 				// port
 				if (isdigit(c)) {
@@ -650,7 +648,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 	case kGopherTypeText:
 		break;
 	case kGopherTypeSearch:
-		query = SearchPrompt(NULL);
+		if (!query) query = SearchPrompt(NULL);
 		if (!query) return 0;
 		break;
 	default: {
@@ -663,10 +661,12 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		}
 	}
 
+	if (type != kGopherTypeSearch) query = NULL;
+	if (query && !*query) query = NULL;
 
 
 	extra = host.length + selector.length;
-	if (query && *query) extra += *query;
+	if (query) extra += *query;
 	extra += 3; // pstring.
 
 	p = malloc(extra);
@@ -684,7 +684,7 @@ unsigned QueueURL(const char *cp, unsigned length) {
 		memcpy(p, cp + selector.location, selector.length);
 		p += selector.length;
 	}
-	if (query && *query) {
+	if (query) {
 		int i = *query;
 		item->query = p;
 		i = *query + 1;
