@@ -33,10 +33,11 @@
 
 #define	kNewItem	FileBase+0
 #define	kOpenItem	FileBase+1
-#define	kSaveItem	FileBase+2
-#define	kPageSetupItem	FileBase+3
-#define	kPrintItem	FileBase+4
-#define	kQuitItem	FileBase+5
+#define	kSearchItem	FileBase+2
+#define	kSaveItem	FileBase+3
+#define	kPageSetupItem	FileBase+4
+#define	kPrintItem	FileBase+5
+#define	kQuitItem	FileBase+6
 
 #define kSelectAllItem EditBase+0
 

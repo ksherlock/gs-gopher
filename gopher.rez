@@ -73,6 +73,7 @@ resource rMenu (kFileMID, nocrossbank){
 	kFileMID,
 	{
 		kOpenItem,
+		kSearchItem,
 		kSaveItem,
 		kCloseItem,
 		kDivider,
@@ -391,6 +392,16 @@ resource rMenuItem (kOpenItem, nocrossbank){
 	kOpenItem
 };
 
+resource rMenuItem (kSearchItem, nocrossbank){
+	kSearchItem,
+	"/",
+	"/",
+	0,
+	0x8000,
+	kSearchItem
+};
+
+
 resource rMenuItem (kSaveItem, nocrossbank){
 	kSaveItem,
 	"S",
@@ -511,6 +522,7 @@ resource rPString (kAbout, nocrossbank){"About..."};
 resource rPString (kPreferences, nocrossbank){"Preferences..."};
 
 resource rPString (kOpenItem, nocrossbank){"Open..."};
+resource rPString (kSearchItem, nocrossbank){"Search..."};
 resource rPString (kSaveItem, nocrossbank){"Save"};
 resource rPString (kCloseItem, nocrossbank){"Close"};
 resource rPString (kPageSetupItem, nocrossbank){"Page Setup"};
