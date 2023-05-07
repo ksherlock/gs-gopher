@@ -902,9 +902,9 @@ void SetControlTextByID(GrafPortPtr win, Long id, char *text) {
 		// we can't just set the title, we also have to swap from resource to pointer and set the length.
 		CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
 		if (ctrlH) {
-			SetCtlTitle(text+1, (Handle)ctrlH);
 			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH);
 			SetCtlValue(*text, ctrlH);
+			SetCtlTitle(text+1, (Handle)ctrlH);
 		}
 	}
 }
