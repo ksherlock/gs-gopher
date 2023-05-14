@@ -29,9 +29,9 @@ enum {
 };
 
 enum {
-	kFlagWrap = 0b00000001,
+	kFlagWrap  = 0b00000001,
 	kFlagDeDot = 0b00000010,
-	kFlagTabMask = 0b00001100
+	kFlagTab   = 0b00000100
 };
 
 // records for the List Manager index.

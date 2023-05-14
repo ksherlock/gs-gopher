@@ -48,6 +48,7 @@ const char *ReqName = "\pTCP/IP~kelvin~gopher~";
 unsigned MyID;
 
 MenuRecHndl hMenu = NULL;
+MenuRecHndl hTabMenu = NULL;
 
 
 static Pointer Icons[5];
@@ -148,6 +149,27 @@ void NetworkUpdate(unsigned up) {
 	}
 }
 
+
+void TabMenuUpdate(unsigned flags) {
+
+	// for hierarchic, we need to insert the menu to use CheckMItem, etc.
+
+	if (hTabMenu) {
+		InsertMenu(hTabMenu, 0);
+	}
+
+	if (flags & kFlagTab) {
+		CheckMItem(1, kTab4Item);
+		CheckMItem(0, kTab8Item);
+	} else {
+		CheckMItem(0, kTab4Item);
+		CheckMItem(1, kTab8Item);
+	}
+
+	if (hTabMenu) {
+		DeleteMenu(kH_TabItem);
+	}
+}
 // todo -- update for DAs.
 // todo -- copy should only be active if there's a text selection or list selection.
 
@@ -224,6 +246,8 @@ void MenuUpdate(struct cookie *cookie) {
 		CheckMItem(flags & kFlagWrap, kWrapTextItem);
 		SetMenuFlag(enableMenu, kTextMID);
 		HiliteMenu(0, kTextMID);
+
+		TabMenuUpdate(flags);
 
 		EnableMItem(kAddBookmarkItem);
 	}
@@ -652,7 +676,11 @@ static void Setup(void) {
 		DisposeMenu(m);
 
 		hMenu = HierarchicNew(refIsResource, kH_TextMID);
+
 		InsertMenu(hMenu, kEditMID);
+
+		hTabMenu = HierarchicGetMenuHandle(hMenu, kH_TabItem);
+
 	}
 
 	#if 1
@@ -904,9 +932,9 @@ void SetControlTextByID(GrafPortPtr win, Long id, char *text) {
 		// we can't just set the title, we also have to swap from resource to pointer and set the length.
 		CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
 		if (ctrlH) {
-			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH);
-			SetCtlValue(*text, ctrlH);
-			SetCtlTitle(text+1, (Handle)ctrlH);
+			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH); // does not re-draw
+			SetCtlValue(*text, ctrlH); // redraws (draw control)
+			SetCtlTitle(text+1, (Handle)ctrlH); // re-draws (new-value)
 		}
 	}
 }
@@ -1746,6 +1774,36 @@ void ToggleWrapText(void) {
 	FixedRuler.rightMargin = 640;
 }
 
+void DoTab(unsigned tab) {
+
+	static struct TEPixelRuler Ruler;
+
+	GrafPortPtr win = FrontWindow();
+	if (!win) return;
+
+	text_cookie *cookie = (text_cookie *)GetWRefCon(win);
+	if (!cookie || cookie->type != kGopherTypeText) return;
+
+	Handle teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+	if (_toolErr || !teH) return;
+
+	unsigned flags = cookie->flags;
+
+	TEGetRuler(refIsPointer, (Ref)&Ruler, teH);
+
+	if (tab == 4) {
+		flags |= kFlagTab;
+		Ruler.tabTerminator = 4 * FixedCharWidth;
+	}
+	if (tab == 8) {
+		flags &= ~kFlagTab;
+		Ruler.tabTerminator = 8 * FixedCharWidth;
+	}
+	TESetRuler(refIsPointer, (Ref)&Ruler, teH);
+	cookie->flags = flags;
+	TabMenuUpdate(flags);
+}
+
 void DoMenu(void) {
 	unsigned item = event.wmTaskData & 0xffff;
 	unsigned menu = event.wmTaskData >> 16;
@@ -1777,6 +1835,12 @@ void DoMenu(void) {
 			DoBinscii();
 			break;
 
+		case kTab4Item:
+			DoTab(4);
+			break;
+		case kTab8Item:
+			DoTab(8);
+			break;
 
 		case kAbout:
 			DoAbout();

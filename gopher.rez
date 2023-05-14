@@ -265,7 +265,7 @@ resource rMenuItem (kTab4Item, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kTab4Item
 };
 
@@ -274,7 +274,7 @@ resource rMenuItem (kTab8Item, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kTab8Item
 };
 
@@ -284,7 +284,7 @@ resource rMenuItem (kH_TabItem, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kH_TabItem
 };
 
@@ -293,7 +293,7 @@ resource rMenuItem (kH_Tab4Item, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kH_Tab4Item
 };
 
@@ -302,7 +302,7 @@ resource rMenuItem (kH_Tab8Item, nocrossbank){
     "",
     "",
     0,
-    0x8000 | rMIDisabled,
+    0x8000,
     kH_Tab8Item
 };
 
