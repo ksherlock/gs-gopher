@@ -921,10 +921,10 @@ void IndexComplete(DownloadItem *item) {
 
  	lines = item->lines + 1;
 	tlen = TitleLength(item);
-	extra = tlen + sizeof(ListEntry) * lines;
+	extra = sizeof(index_cookie) + tlen + sizeof(ListEntry) * lines;
 
-	cookie = malloc(sizeof(index_cookie) + extra);
-	memset(cookie, 0, sizeof(index_cookie) + extra);
+	cookie = malloc(extra);
+	memset(cookie, 0, extra);
 
 	cookie->type = item->type;
 
@@ -960,6 +960,7 @@ void TextComplete(DownloadItem *item) {
 	char *cp;
 	text_cookie *cookie;
 	unsigned tlen;
+	unsigned extra;
 
 	// check for a trailing .\r
 	// may not be present since many gopher servers are not compliant.
@@ -971,9 +972,9 @@ void TextComplete(DownloadItem *item) {
 
 
 	tlen = TitleLength(item);
-
-	cookie = malloc(sizeof(text_cookie) + tlen);
-
+	extra = sizeof(text_cookie) + tlen;
+	cookie = malloc(extra);
+	memset(cookie, 0, extra);
 	cp = cookie->data;
 	cookie->type = item->type;
 	cookie->title = cp;
