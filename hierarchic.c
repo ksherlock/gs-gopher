@@ -77,6 +77,30 @@ MenuRecHndl HierarchicNew(unsigned refDesc, Ref ref) {
 	return rv;
 }
 
+MenuRecHndl HierarchicGetMenuHandle(MenuRecHndl parent, unsigned menuID) {
+
+
+	MenuRecHndl rv = 0;
+	if (Hierarchic) {
+		asm {
+			pea 0
+			pea 0
+			pei parent+2
+			pei parent
+			pei menuID
+			lda #9 // GetMenuHandle
+			jsl __Hierarchic
+			pla
+			sta rv
+			pla
+			sta rv+2
+		}
+	}
+	return rv;
+
+}
+
+
 void HierarchicShutDown(void) {
 
 	if (Hierarchic) {

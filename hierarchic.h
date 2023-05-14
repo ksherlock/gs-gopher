@@ -6,6 +6,7 @@
 int HierarchicStartUp(unsigned memID);
 void HierarchicShutDown(void);
 MenuRecHndl HierarchicNew(unsigned refDesc, Ref ref);
+MenuRecHndl HierarchicGetMenuHandle(MenuRecHndl parent, unsigned menuID);
 void HierarchicDispose(MenuRecHndl menu);
 
 
