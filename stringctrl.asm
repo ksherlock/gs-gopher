@@ -282,12 +282,12 @@ control_draw	private
 
 	using records
 
-!	pha
-!	pha
-!	pha
-!	_GetFontFlags
-!	_GetForeColor
-!	_GetBackColor
+	pha
+	_GetFontFlags
+	pha
+	_GetForeColor
+	pha
+	_GetBackColor
 
 ! set up the colors, etc.
 	_PenNormal
@@ -368,11 +368,11 @@ str	anop
 
 exit	anop
 
-	~SetBackColor #$ffff
-	~SetForeColor #$0000
-!	_SetBackColor
-!	_SetForeColor
-!	_SetFontFlags
+!	~SetBackColor #$ffff
+!	~SetForeColor #$0000
+	_SetBackColor
+	_SetForeColor
+	_SetFontFlags
 
 	rts
 
