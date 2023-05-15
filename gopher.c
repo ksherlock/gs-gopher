@@ -64,8 +64,8 @@ unsigned MenuWidth = 0;
 
 
 unsigned EditSearchURL(void);
-void SetControlTextByID(GrafPortPtr win, Long id, char *text);
 
+void SetStringByID(char *, GrafPortPtr, Long);
 
 #pragma toolparms 1
 #pragma databank 1
@@ -858,29 +858,20 @@ void DoPrefs(void) {
 	GrafPortPtr win;
 	GrafPortPtr shadow;
 	long id;
-	Handle h;
+	// Handle h;
 	unsigned changes = 0;
 
 
 	oldTheme = Theme;
 	memcpy(oldSearchURL, SearchURL, 256);
 
-	// switch the resource type...
-	h = LoadResource(rControlTemplate, kPrefsSearch);
-	if (h) {
-		// load it and update the proc ref here ; NewWindow2 should use this template
-		ControlTemplate *temp;
-		HLock(h);
-		temp = *(ControlTemplate **)h;
-		temp->procRef = LinkCtrlRID;
-	}
 
 	win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kPrefsWindow, rWindParam1);
 
 	EndDialog = 0;
 
 	SetCtlValueByID(0x100 | Theme, win, kPrefsTheme);
-	SetControlTextByID(win, kPrefsSearch, SearchURL);
+	SetStringByID(SearchURL, win, kPrefsSearch);
 
 	shadow = CreateShadowWindow(win);
 	for(;;) {
@@ -914,7 +905,7 @@ void DoPrefs(void) {
 		if (id == kPrefsSearch) {
 			if (EditSearchURL()) {
 				changes |= 2;
-				SetControlTextByID(win, kPrefsSearch, SearchURL);
+				SetStringByID(SearchURL, win, kPrefsSearch);
 			}
 		}
 
@@ -927,17 +918,19 @@ void DoPrefs(void) {
 }
 
 
-void SetControlTextByID(GrafPortPtr win, Long id, char *text) {
-	if (text && *text) {
-		// we can't just set the title, we also have to swap from resource to pointer and set the length.
-		CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
-		if (ctrlH) {
-			SetCtlMoreFlags(fCtlProcRefNotPtr | refIsPointer, ctrlH); // does not re-draw
-			SetCtlValue(*text, ctrlH); // redraws (draw control)
-			SetCtlTitle(text+1, (Handle)ctrlH); // re-draws (new-value)
-		}
+
+// for use with string control, which uses a pstring.
+void SetStringByID(char *text, GrafPortPtr win, Long id) {
+
+	CtlRecHndl ctrlH = GetCtlHandleFromID(win, id);
+	if (!_toolErr) {
+		unsigned moreFlags = GetCtlMoreFlags(ctrlH);
+		unsigned mf = (moreFlags & ~0x03) | refIsPointer;
+		if (mf != moreFlags)SetCtlMoreFlags(mf, ctrlH);
+		SetCtlTitle(text,(Handle)ctrlH);
 	}
 }
+
 
 void DoNetworkHelper(GrafPortPtr win) {
 	long ip;
@@ -946,15 +939,15 @@ void DoNetworkHelper(GrafPortPtr win) {
 	if (TCPIPGetConnectStatus()) {
 		ip = TCPIPGetMyIPAddress();
 		TCPIPConvertIPToASCII(ip, buffer, 0);
-		SetControlTextByID(win, kNetworkStatusRight, "\pConnected");
-		SetControlTextByID(win, kNetworkIPRight, buffer);
+		SetStringByID("\pConnected", win, kNetworkStatusRight);
+		SetStringByID(buffer, win, kNetworkIPRight);
 
 		HiliteCtlByID(inactiveHilite, win, kNetworkConnect);
 		HiliteCtlByID(noHilite, win, kNetworkDisconnect);
 
 	} else {
-		SetControlTextByID(win, kNetworkStatusRight, "\pDisconnected");
-		SetControlTextByID(win, kNetworkIPRight, "\p");
+		SetStringByID("\pDisconnected", win, kNetworkStatusRight);
+		SetStringByID("\p", win, kNetworkIPRight);
 
 		HiliteCtlByID(noHilite, win, kNetworkConnect);
 		HiliteCtlByID(inactiveHilite, win, kNetworkDisconnect);
@@ -965,7 +958,7 @@ void DoNetworkHelper(GrafPortPtr win) {
 #pragma toolparms 1
 
 void NetworkStatusCallback(const char *str) {
-	SetControlTextByID(NULL, kNetworkStatusRight, str);
+	SetStringByID(str, NULL, kNetworkStatusRight);
 }
 
 #pragma databank 0

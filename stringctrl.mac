@@ -1,0 +1,257 @@
+ MACRO
+&lab _HLock
+&lab ldx #$2002
+ jsl $E10000
+ MEND
+ MACRO
+&lab _HUnlock
+&lab ldx #$2202
+ jsl $E10000
+ MEND
+ MACRO
+&lab _DrawStringWidth
+&lab ldx #$1512
+ jsl $E10000
+ MEND
+ MACRO
+&lab _EraseRect
+&lab ldx #$5504
+ jsl $E10000
+ MEND
+ MACRO
+&lab _GetBackColor
+&lab ldx #$A304
+ jsl $E10000
+ MEND
+ MACRO
+&lab _GetFontFlags
+&lab ldx #$9904
+ jsl $E10000
+ MEND
+ MACRO
+&lab _GetForeColor
+&lab ldx #$A104
+ jsl $E10000
+ MEND
+ MACRO
+&lab _MoveTo
+&lab ldx #$3A04
+ jsl $E10000
+ MEND
+ MACRO
+&lab _PenNormal
+&lab ldx #$3604
+ jsl $E10000
+ MEND
+ MACRO
+&lab _SetBackColor
+&lab ldx #$A204
+ jsl $E10000
+ MEND
+ MACRO
+&lab _SetFontFlags
+&lab ldx #$9804
+ jsl $E10000
+ MEND
+ MACRO
+&lab _SetForeColor
+&lab ldx #$A004
+ jsl $E10000
+ MEND
+ macro
+&l ~FindHandle &p1
+&l ph4 &p1
+ ldx #$1A02
+ jsl $E10000
+ mend
+ macro
+&l ~HLock &p1
+&l ph4 &p1
+ ldx #$2002
+ jsl $E10000
+ mend
+ macro
+&l ~SetBackColor &p1
+&l ph2 &p1
+ ldx #$A204
+ jsl $E10000
+ mend
+ macro
+&l ~SetFontFlags &p1
+&l ph2 &p1
+ ldx #$9804
+ jsl $E10000
+ mend
+ macro
+&l ~SetForeColor &p1
+&l ph2 &p1
+ ldx #$A004
+ jsl $E10000
+ mend
+ macro
+&l ~LoadResource &p1,&p2
+&l ph2 &p1
+ ph4 &p2
+ ldx #$0E1E
+ jsl $E10000
+ mend
+ macro
+&l ~ReleaseResource &p1,&p2,&p3
+&l ph2 &p1
+ ph2 &p2
+ ph4 &p3
+ ldx #$171E
+ jsl $E10000
+ mend
+ macro
+&l ph2 &n1
+&l anop
+ aif "&n1"="*",.f
+ lclc &c
+&c amid &n1,1,1
+ aif "&c"="#",.d
+ aif s:longa=1,.a
+ rep #%00100000
+.a
+ aif "&c"<>"{",.b
+&c amid &n1,l:&n1,1
+ aif "&c"<>"}",.g
+&n1 amid &n1,2,l:&n1-2
+ lda (&n1)
+ pha
+ ago .e
+.b
+ aif "&c"="<",.c
+ lda &n1
+ pha
+ ago .e
+.c
+&n1 amid &n1,2,l:&n1-1
+ pei &n1
+ ago .e
+.d
+&n1 amid &n1,2,l:&n1-1
+ pea &n1
+ ago .f
+.e
+ aif s:longa=1,.f
+ sep #%00100000
+.f
+ mexit
+.g
+ mnote "Missing closing '}'",16
+ mend
+ macro
+&l ph4 &n1
+&l anop
+ aif "&n1"="*",.f
+ lclc &c
+&c amid &n1,1,1
+ aif "&c"="#",.d
+ aif s:longa=1,.a
+ rep #%00100000
+.a
+ aif "&c"<>"{",.b
+&c amid &n1,l:&n1,1
+ aif "&c"<>"}",.g
+&n1 amid &n1,2,l:&n1-2
+ ldy #2
+ lda (&n1),y
+ pha
+ lda (&n1)
+ pha
+ ago .e
+.b
+ aif "&c"<>"[",.c
+ ldy #2
+ lda &n1,y
+ pha
+ lda &n1
+ pha
+ ago .e
+.c
+ aif "&c"<>"<",.c1
+&n1 amid &n1,2,l:&n1-1
+ pei &n1+2
+ pei &n1
+ ago .e
+.c1
+ lda &n1+2
+ pha
+ lda &n1
+ pha
+ ago .e
+.d
+&n1 amid &n1,2,l:&n1-1
+ pea +(&n1)|-16
+ pea &n1
+ ago .f
+.e
+ aif s:longa=1,.f
+ sep #%00100000
+.f
+ mexit
+.g
+ mnote "Missing closing '}'",16
+ mend
+ macro
+&lab plax
+&lab pla
+ plx
+ mend
+ macro
+&lab ldax &address,&off
+ lclc &c
+&lab anop
+&c amid &address,1,1
+ aif "&c"="[",.deref
+ aif "&c"="#",.imm
+ lda &address
+ ldx &address+2
+ mexit
+.deref
+ mexit
+.imm
+ aif "&address"="0",.imm0
+&address amid &address,2,l:&address-1
+ lda #&address
+ ldx #^&address
+ mexit
+.imm0
+ lda #0
+ tax
+ mexit
+.deref
+&address amid &address,2,l:&address-2
+ aif c:&off=0,.deref0
+ aif "&off"="y",.derefy
+&c amid &off,1,1
+ aif "&c"<>"#",.derefldy
+ ldy &off+2
+ ago .deref2
+.derefldy
+ ldy &off
+.derefy
+ iny
+ iny
+.deref2
+ lda [&address],y
+ tax
+ dey
+ dey
+ lda [&address],y
+ mexit
+.deref0
+ ldy #2
+ lda [&address],y
+ tax
+ lda [&address]
+ mend
+ macro
+&lab stax &address
+ lclc &c
+&lab anop
+&c amid &address,1,1
+ sta &address
+ stx &address+2
+ mend

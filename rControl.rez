@@ -1,0 +1,212 @@
+
+
+#define swCompress $8000
+#define swEllipsesLeft $2000
+#define swEllipsesRight $4000
+#define swEllipsesCenter $6000
+
+
+/*------------------------ rControlTemplate ---------------*/
+type rControlTemplate {
+        integer = 3+$$optionalcount (Fields);/* pCount must be at least 6 */
+        _mybase_ longint;                   /* Application defined ID */
+        rect;                               /* controls bounding rectangle */
+        switch {
+
+        case SimpleButtonControl:
+            key longint = 0x80000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Title Ref */
+                _mybase_ longint;           /* color table ref */
+                KeyEquiv;
+            };
+
+        case CheckControl:
+            key longint = 0x82000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Title Ref */
+                integer;                    /* initial value */
+                _mybase_ longint;           /* color table ref */
+                KeyEquiv;
+            };
+
+        case RadioControl:
+                key longint = 0x84000000;   /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Title Ref */
+                integer;                    /* initial value */
+                _mybase_ longint;           /* color table ref */
+                KeyEquiv;
+            };
+        case scrollControl:
+            key longint = 0x86000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* Max Size */
+                integer;                    /* viewSize */
+                integer;                    /* initial value */
+                _mybase_ longint;           /* color table ref */
+            };
+
+        case statTextControl:
+            key longint = 0x81000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Text Ref */
+                integer;                    /* text size */
+                integer leftJust,
+                        centerJust,
+                        fullJust,
+                        rightJust = -1;     /* text justification */
+            };
+
+        case editLineControl:
+            key longint = 0x83000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* Max Size */
+                _mybase_ longint;           /* resource ID of the text */
+                integer;                    /* password character - 6.0 */
+                integer;                    /* leClassifyKey flags - 6.0.1 */
+            };
+
+        case PopUpControl:
+            key longint = 0x87000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* Title Width */
+                _mybase_ longint;           /* menu Ref */
+                integer;                    /* Initial Value */
+                _mybase_ longint;           /* Color table ref */
+            };
+
+        case ListControl:
+            key longint = 0x89000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* list size */
+                integer;                    /* List View */
+                _mybase_ integer;           /* List Type */
+                integer;                    /* List Start */
+                longint =0 ;                /* member drawing routine */
+                integer;                    /* ListMemHeight */
+                integer;                    /* List Mem Size */
+                _mybase_ longint;           /* List Ref */
+                _mybase_ longint;           /* Color Ref */
+            };
+
+        case growControl:
+            key longint = 0x88000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* color table ref */
+            };
+
+        case PictureControl:
+            key longint = 0x8D000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* picture ref */
+            };
+
+        case editTextControl:
+            key longint = 0x85000000;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* text flags */
+                rect;                       /* indent rect */
+                _mybase_ longint;           /* vert bar */
+                integer;                    /* vert Amount */
+                _mybase_ longint;           /* hor bar */
+                integer;                    /* hor amount */
+                _mybase_ longint;           /* style ref */
+                _mybase_ integer;           /* text descriptor */
+                _mybase_ longint;           /* text ref */
+                longint;                    /* text length */
+                longint;                    /* max chars */
+                longint;                    /* max lines */
+                integer;                    /* Max chars per line */
+                integer;                    /* max height */
+                _mybase_ longint;           /* color ref */
+                _mybase_ integer;           /* drawing mode */
+                _mybase_ LongInt;           /* Filter Proc Ptr */
+            };
+
+        case IconButtonControl:
+            key longint = 0x07FF0001;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Icon Ref */
+                _mybase_ longint;           /* Title Ref */
+                _mybase_ longint;           /* color table ref */
+                _mybase_ integer;           /* Display mode */
+                KeyEquiv;
+            };
+
+        case rectangleControl:
+            key longint = 0x87FF0003;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* pen height */
+                integer;                    /* pen width */
+                hex string[8];              /* penmask */
+                hex string[32];             /* penpattern */
+            };
+
+        case thermometerControl:
+            key longint = 0x87FF0002;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                integer;                    /* value for pos of mercury */
+                integer;                    /* scale for mercury */
+                _mybase_ longint;           /* color table reference */
+            };
+
+        // custom
+        case stringControl:
+            key longint = 0x00700001;       /* procRef */
+            optional Fields {
+                _mybase_ integer;           /* flags */
+                _mybase_ integer;           /* more flags */
+                _mybase_ longint;           /* refcon */
+                _mybase_ longint;           /* Title Ref */
+                integer;                    /* DrawStringWidth flags */
+                _mybase_ longint;           /* Color table Ref */
+                integer;                    /* value 1/0 */
+
+            };
+
+
+        };
+};

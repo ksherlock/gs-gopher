@@ -1,6 +1,7 @@
 #include "Types.rez"
 #include "defines.h"
 
+#include "rControl.rez"
 
 resource rVersion (0x1) {
 	{
@@ -1539,11 +1540,12 @@ resource rTextForLETextBox2(kNetworkStatusLeft) {
 	"Status:"
 };
 
+/*
 resource rControlTemplate (kNetworkStatusRight) {
 	kNetworkStatusRight,
 	{4, 104, 14, 300},
 	statTextControl {
-		 {	/* optional Fields */
+		 {
 			0x0,
 			FctlProcNotPtr + refIsResource,
 			0x0,
@@ -1556,6 +1558,27 @@ resource rControlTemplate (kNetworkStatusRight) {
 resource rTextForLETextBox2(kNetworkStatusRight) {
 	""
 };
+*/
+
+
+
+resource rControlTemplate (kNetworkStatusRight) {
+	kNetworkStatusRight,
+	{4, 104, 14, 300},
+	stringControl {
+		 {
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkStatusRight,
+			0 //swCompress + swEllipsesRight, // DrawStringWidth flags
+		}
+	}
+};
+resource rPString(kNetworkStatusRight) {
+	""
+};
+
 
 
 resource rControlTemplate (kNetworkIPLeft) {
@@ -1576,11 +1599,12 @@ resource rTextForLETextBox2(kNetworkIPLeft) {
 	"IP Address:"
 };
 
+/*
 resource rControlTemplate (kNetworkIPRight) {
 	kNetworkIPRight,
 	{18, 104, 28, 300},
 	statTextControl {
-		 {	/* optional Fields */
+		 {
 			0x0,
 			FctlProcNotPtr + refIsResource,
 			0x0,
@@ -1593,6 +1617,26 @@ resource rControlTemplate (kNetworkIPRight) {
 resource rTextForLETextBox2(kNetworkIPRight) {
 	""
 };
+*/
+
+resource rControlTemplate (kNetworkIPRight) {
+	kNetworkIPRight,
+	{18, 104, 28, 300},
+	stringControl {
+		 {
+			0x0,
+			FctlProcNotPtr + refIsResource,
+			0x0,
+			kNetworkIPRight,
+			0 //swCompress + swEllipsesRight, // DrawStringWidth flags
+		}
+	}
+};
+resource rPString(kNetworkIPRight) {
+	""
+};
+
+
 
 resource rControlTemplate (kNetworkConnect) {
 	kNetworkConnect,
@@ -1748,7 +1792,7 @@ resource rControlTemplate (kPrefsSearchLabel) {
 	kPrefsSearchLabel,
 	{26, 10, 36, 120 },
 	statTextControl {
-		 {	/* optional Fields */
+		 {
 			0x0,
 			FctlProcNotPtr + refIsResource,
 			0x0,
@@ -1762,12 +1806,12 @@ resource rTextForLETextBox2(kPrefsSearchLabel) {
 	"Search Engine"
 };
 
-
+/*
 resource rControlTemplate (kPrefsSearch) {
 	kPrefsSearch,
 	{26, 124, 36, kPrefsWidth - 10 },
 	statTextControl {
-		 {	/* optional Fields */
+		 {
 			fSquishText + fBlastText,
 			FctlProcNotPtr + refIsResource,
 			0x0,
@@ -1780,6 +1824,31 @@ resource rControlTemplate (kPrefsSearch) {
 resource rTextForLETextBox2(kPrefsSearch) {
 	"gopher.floodgap.com/7/v2/vs"
 };
+*/
+
+resource rControlTemplate (kPrefsSearch) {
+	kPrefsSearch,
+	{26, 124, 36, kPrefsWidth - 10 },
+	stringControl {
+		 {
+			0x0,
+			FctlProcNotPtr + (refIsResource << 2) + refIsResource,
+			0x0,
+			kPrefsSearch,
+			swCompress + swEllipsesRight, // DrawStringWidth flags
+			kPrefsSearch // color table
+		}
+	}
+};
+resource rPString(kPrefsSearch) {
+	"gopher.floodgap.com/7/v2/vs"
+};
+
+data rCtlColorTbl(kPrefsSearch) {
+	$"1111 ffff 1111 ffff"
+};
+
+
 
 
 resource rControlTemplate (kPrefsSave) {
@@ -1835,4 +1904,4 @@ resource rPString(kPrefsCancel) {
 read rFont(1) "resources/Monte.Carlo.11";
 read rFont((0xFFFD << 8) | 9) "resources/Chicago.09";
 
-read rCtlDefProc (LinkCtrlRID, fixed, convert) "linkctrl";
+read rCtlDefProc (0x00700001, fixed, convert) "stringctrl";

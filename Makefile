@@ -25,6 +25,9 @@ gopher: $(OBJS) $(ROBJ)
 linkctrl : o/linkctrl.o
 	$(CC) $(LDFLAGS) -o $@ $<
 
+stringctrl : o/stringctrl.o
+	$(CC) $(LDFLAGS) -o $@ $<
+
 .PHONY: clean
 clean:
 	$(RM) gopher $(OBJS) $(ROBJ)
@@ -41,7 +44,7 @@ o/binscii.o : binscii.c
 o/crc.o : crc.asm crc.mac
 
 
-o/gopher.r: gopher.rez defines.h linkctrl
+o/gopher.r: gopher.rez defines.h stringctrl
 
 o/q.o: q.c q.h
 
