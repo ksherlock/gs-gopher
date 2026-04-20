@@ -103,6 +103,12 @@ static int decode(const uint8_t *src, unsigned len, uint8_t *dest) {
 	return (len << 1) + len;
 }
 
+
+static uint8_t buffer[1536]; /* 1536 = 512 * 3 == 48 * 32 */
+static RefNumRecGS closeDCB = { 1, 0 };
+static IORecGS ioDCB = { 4, 0, buffer, 0, 0 };
+
+
 static int de_scii(const uint8_t *ptr, long size) {
 // ptr points to line AFTER FiLeStArTfIlEsTaRt
 
@@ -110,11 +116,6 @@ static int de_scii(const uint8_t *ptr, long size) {
 	static GSString32 filename;
 
 
-
-	static uint8_t buffer[1536]; /* 1536 = 512 * 3 == 48 * 32 */
-
-	static RefNumRecGS closeDCB = { 1, 0 };
-	static IORecGS ioDCB = { 4, 0, buffer, 0, 0 };
 
 	uint32_t file_size;
 	uint32_t seg_start;
@@ -274,19 +275,19 @@ int DecodeUUE(const uint8_t *ptr, long size) {
 				i += 5;
 				if (memcmp(ptr + i, "-base64 ", 8)) {
 					b64 = 1;
-					i += 8;
+					i += 12; /* include mode + space */
 					ptr += i;
 					size -= i;
 					return error(de_base(ptr + i, size));
 				}
 				else if (ptr[i] == ' ') {
 					b64 = 0;
-					i += 1;
+					i += 5; /* include 2 spaces + mode */
 					ptr += i;
 					size -= i;
 					return error(de_uue(ptr + i, size));
 				} else {
-					prev = 'n';
+					prev = '\n';
 					continue;
 				}
 			}
@@ -295,6 +296,151 @@ int DecodeUUE(const uint8_t *ptr, long size) {
 	}
 	return error(BS_NOT_BINSCII);
 
+}
+
+
+static int de_uue(const uint8_t *ptr, long size) {
+// ptr points to the mode and filename
+
+	static struct header header;
+	static GSString32 filename;
+
+	uint32_t file_size;
+	uint32_t seg_start;
+	uint32_t seg_len;
+
+
+	unsigned i;
+	unsigned c;
+	unsigned crc;
+	unsigned refNum;
+
+	if (size < 64 + 52 + 4 + 2) {
+		return BS_TRUNCATED;
+	}
+
+
+
+	for (i = 64; isspace(ptr[i]); ++i, --size);
+	ptr += i;
+	size -= i;
+
+	if (size < 52 + 4) {
+		return BS_TRUNCATED;
+	}
+
+	// name length
+	filename.length = ptr[0] & 0x1f;
+	memcpy(filename.text, ptr + 1, filename.length);
+
+	decode(ptr + 16, 36, (char *)&header);
+
+	for (i = 52; isspace(ptr[i]); ++i);
+	ptr += i;
+	size -= i;
+
+
+	file_size = *(uint32_t *)&header.file_size & 0xffffff;
+	seg_start = *(uint32_t *)&header.seg_start & 0xffffff;
+	seg_len = *(uint32_t *)&header.seg_len & 0xffffff;
+
+	if (crc != *(uint16_t *)&header.crc) return BS_BAD_CRC;
+	if (seg_start != 0 || seg_len != file_size) return BS_PARTIAL; // partial file
+
+	// check for directory file type / aux type?
+
+	refNum = FilePrompt((GSString255 *)&filename, header.file_type, *(uint16_t *)&header.aux_type);
+	if (refNum == 0) return BS_USER_CANCELED;
+
+	ioDCB.refNum = refNum;
+	closeDCB.refNum = refNum;
+
+
+	// each line is
+	// <length char> <encoded data> <newline>
+	// encoded data is 3 bytes -> 24-bit number, split into 4 6-bit numbers
+	// each 6-bit number is + 32 to make it printable.
+
+	unsigned offset = 0;
+	unsigned j = 0;
+	for(;;) {
+
+
+		unsigned len = ptr[0] - ' ';
+		if (len == '@' || len == 0) break; // ` - zero length
+		if (len > '@') return BS_NOT_BINSCII; // need to close the file...
+
+		if (size < (uint32_t)len * 2) return BS_TRUNCATED;
+
+		++ptr;
+		--size;
+
+		for (unsigned j = 0; j < len; ++j) {
+
+			uint32_t scratch = 0;
+			unsigned y = ptr[0] - ' ';
+			if (y == '@') y = 0;
+			if (y > '@') return BS_NOT_BINSCII;
+			scratch = (uint32_t)y << 18;
+
+
+			y = ptr[1] - ' ';
+			if (y == '@') y = '0';
+			if (y > '@') return BS_NOT_BINSCII;
+			scratch |= (uint32_t)y << 12;
+
+			y = ptr[2] - ' ';
+			if (y == '@') y = '0';
+			if (y > '@') return BS_NOT_BINSCII;
+			scratch |= y << 6;
+
+
+			y = ptr[3] - ' ';
+			if (y == '@') y = '0';
+			if (y > '@') return BS_NOT_BINSCII;
+			scratch |= y;
+
+			ptr += 4;
+			size -= 4;
+		}
+		// expect a CR at this point...
+
+
+
+
+		if (offset == 1536) {
+
+			ioDCB.requestCount = 1536;
+			WriteGS(&ioDCB);
+
+			offset = 0;
+			file_size -= 1536;
+		}
+
+		decode(ptr, 64, buffer + offset);
+		offset += 48;
+
+		for (i = 64; isspace(ptr[i]); ++i);
+		ptr += i;
+		size -= i;
+	}
+
+	if (offset) {
+		crc = crc_update(crc, buffer, offset);
+
+		ioDCB.requestCount = file_size;
+		WriteGS(&ioDCB);
+
+	}
+	CloseGS(&closeDCB);
+
+	// todo - set create/mod dates?
+
+	if (size < 4) return BS_TRUNCATED; // trailing crc.
+	decode(ptr, 4, header.crc);
+	if (crc != *(uint16_t *)&header.crc) return BS_BAD_CRC;
+
+	return BS_OK;
 }
 #endif
 
