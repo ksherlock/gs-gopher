@@ -40,6 +40,8 @@
 #define	kQuitItem	FileBase+6
 
 #define kSelectAllItem EditBase+0
+#define kFindItem EditBase+1
+#define kFindNextItem EditBase+2
 
 #define kWrapTextItem TextBase+0
 #define kDeDotItem TextBase+1

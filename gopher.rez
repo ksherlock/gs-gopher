@@ -98,7 +98,10 @@ resource rMenu (kEditMID, nocrossbank){
         kPasteItem,
         kClearItem,
         kDivider,
-        kSelectAllItem
+        kSelectAllItem,
+        kDivider,
+        kFindItem,
+        kFindNextItem
     };
 };
 
@@ -239,6 +242,26 @@ resource rMenuItem (kSelectAllItem, nocrossbank){
     0x8000,
     kSelectAllItem
 };
+
+
+resource rMenuItem (kFindItem, nocrossbank){
+    kFindItem,
+    "F",
+    "f",
+    0,
+    0x8000,
+    kFindItem
+};
+
+resource rMenuItem (kFindNextItem, nocrossbank){
+    kFindNextItem,
+    "G",
+    "g",
+    0,
+    0x8000,
+    kFindNextItem
+};
+
 
 resource rMenuItem (kWrapTextItem, nocrossbank){
     kWrapTextItem,
@@ -536,6 +559,8 @@ resource rPString (kCopyItem, nocrossbank){"Copy"};
 resource rPString (kPasteItem, nocrossbank){"Paste"};
 resource rPString (kClearItem, nocrossbank){"Clear"};
 resource rPString (kSelectAllItem, nocrossbank){"Select All"};
+resource rPString (kFindItem, nocrossbank){"Find..."};
+resource rPString (kFindNextItem, nocrossbank){"Find Next"};
 
 
 resource rPString (kWrapTextItem, nocrossbank){"Wrap Text"};

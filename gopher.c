@@ -170,9 +170,8 @@ void TabMenuUpdate(unsigned flags) {
 		DeleteMenu(kH_TabItem);
 	}
 }
-// todo -- update for DAs.
-// todo -- copy should only be active if there's a text selection or list selection.
 
+// todo -- copy should only be active if there's a text selection or list selection.
 void MenuUpdate(struct cookie *cookie) {
 
 	static int prevMItem = -1;
@@ -195,6 +194,8 @@ void MenuUpdate(struct cookie *cookie) {
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
+		DisableMItem(kFindItem);
+		DisableMItem(kFindNextItem);
 
 		CheckMItem(0, kWrapTextItem);
 		SetMenuFlag(disableMenu, kTextMID);
@@ -222,6 +223,8 @@ void MenuUpdate(struct cookie *cookie) {
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		DisableMItem(kSelectAllItem);
+		DisableMItem(kFindItem);
+		DisableMItem(kFindNextItem);
 
 		CheckMItem(0, kWrapTextItem);
 		SetMenuFlag(disableMenu, kTextMID);
@@ -238,10 +241,14 @@ void MenuUpdate(struct cookie *cookie) {
 
 		DisableMItem(kUndoItem);
 		DisableMItem(kCutItem);
+		// handled by MWSetUpEditMenu but always enable for now
+		// since we don't know if/when the selection changes.
 		EnableMItem(kCopyItem);
 		DisableMItem(kPasteItem);
 		DisableMItem(kClearItem);
 		EnableMItem(kSelectAllItem);
+		EnableMItem(kFindItem);
+		EnableMItem(kFindNextItem); // TODO -- only enable if find item previously used
 
 		CheckMItem(flags & kFlagWrap, kWrapTextItem);
 		SetMenuFlag(enableMenu, kTextMID);
@@ -265,8 +272,12 @@ void WindowChange(void) {
 	if (win == PrevWin) return;
 	PrevWin = win;
 
+	// this sets the edit controls for DAs, etc.
+	MWSetUpEditMenu();
+
 	if (!win) {
 		MenuUpdate(NULL);
+		return;
 	}
 
 	if (GetSysWFlag(win)) {
