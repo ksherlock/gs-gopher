@@ -1647,6 +1647,150 @@ void DoSelectAll(void) {
 
 }
 
+static Str32 findstring;
+GSString32 cifindstring;
+
+unsigned GetFindString(void) {
+
+	CtlRecHndl ctrlH;
+	LERecHndl leH;
+
+	// GrafPortPtr shadow = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kSearchWindowShadow, rWindParam1);
+	GrafPortPtr win = NewWindow2(NULL, NULL, WindowDrawControls, NULL, refIsResource, kFindWindow, rWindParam1);
+
+	GrafPortPtr shadow = CreateShadowWindow(win);
+
+	ctrlH = GetCtlHandleFromID(win, kFindLineEdit);
+	leH = (LERecHndl)GetCtlTitle(ctrlH);
+	if (findstring.textLength)
+		SetLETextByID(win, kFindLineEdit, (StringPtr)&findstring);
+
+
+	unsigned quit = 0;
+	for(;;) {
+		#define flags mwUpdateAll | mwDeskAcc | mwIBeam
+		// DoModalWindow(&event, NULL, (VoidProcPtr)0x80000000, (VoidProcPtr)-1, flags);
+		DoModalWindow(&event, NULL, (VoidProcPtr)OpenEventHook, (VoidProcPtr)-1, flags);
+		#undef flags
+		// break on return, esc (apple-. converted to esc)
+
+		if (event.what == app4Evt) {
+
+			switch((unsigned)event.message) {
+				case kOpenAppleA:
+					// select-all
+					LESetSelect(0, -1, leH);
+					break;
+				case kOpenControlA:
+					LESetSelect(0, 0, leH);
+					break;
+				case kOpenControlE:
+					LESetSelect(-1, -1, leH);
+					break;
+				case kOpenEscape:
+					quit = 1;
+					break;
+				case kOpenReturn:
+					GetLETextByID(win, kFindLineEdit, (StringPtr)&findstring);
+					quit = 2;
+					break;
+			}
+			if (quit) break;
+		}
+
+		if (event.what == nullEvt) {
+			ProcessQueue();
+		}
+	}
+	CloseWindow(shadow);
+	CloseWindow(win); // or just hide so url is retained?
+	InitCursor(); /* reset possible I-beam cursor */
+
+	return quit - 1;
+}
+
+
+long FindCommon(unsigned again) {
+
+	Handle teH;
+	unsigned long size;
+	unsigned long i;
+	unsigned long max;
+	char *ptr;
+	unsigned cc;
+	unsigned j;
+	unsigned long pos = -1;
+
+	GrafPortPtr win = FrontWindow();
+
+	if (!win || GetSysWFlag(win)) return pos;
+
+	teH = (Handle)GetCtlHandleFromID(win, kGopherText);
+
+	if (_toolErr || !teH) return pos;
+
+	// for FindNext, start from previous pos
+	Handle textH = 0;
+	size = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
+	HLock(textH);
+	ptr = *textH;
+
+	max = size - cifindstring.length;
+	if ((long)size < 0) return pos;
+	cc = cifindstring.text[0];
+
+	// todo -- optimize outer loop to use 16-bit ix
+	for (i = 0; i < max; ++i) {
+		unsigned c = *ptr++;
+		if (c >= 'A' && c <= 'Z') c |= 0x20;
+		if (c != cc) continue;
+		for (j = 1; j < cifindstring.length; ++j) {
+			c = ptr[j];
+			if (c >= 'A' && c <= 'Z') c |= 0x20;
+			if (c != cifindstring.text[j]) break;
+		}
+		if (j == cifindstring.length) {
+			pos = i;
+			break;
+		}
+	}
+	DisposeHandle(textH);
+	if (pos == -1) {
+		SysBeep2(sbBadInputValue);
+		return pos; // not found
+	}
+	TESetSelection((Pointer)pos, (Pointer)pos + cifindstring.length, teH);
+	// store search pos in the cookie?
+
+	return pos;
+}
+
+void DoFind(void) {
+	//
+	if (!GetFindString()) {
+		return;
+	}
+	cifindstring.length = findstring.textLength;
+	for (unsigned i = 0; i < cifindstring.length; ++i) {
+		unsigned c = findstring.text[i];
+		if (c >= 'A' && c <= 'Z') c |= 0x20;
+		cifindstring.text[i] = c;
+	}
+
+	FindCommon(0);
+}
+
+void DoFindNext(void) {
+	if (!cifindstring.length) {
+		SysBeep2(sbBadInputValue);
+		return;
+	}
+
+	FindCommon(1);
+}
+
+
+
 ListEntry *SelectedIndex(ListCtlRec *rec) {
 
 	ListEntry *e = (ListEntry *)rec->ctlList;
@@ -1830,6 +1974,15 @@ void DoMenu(void) {
 		case kSelectAllItem:
 			DoSelectAll();
 			break;
+
+		case kFindItem:
+			DoFind();
+			break;
+
+		case kFindNextItem:
+			DoFindNext();
+			break;
+
 
 		case kWrapTextItem:
 			ToggleWrapText();

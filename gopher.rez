@@ -664,6 +664,28 @@ resource rWindParam1 (kURLWindow) {
 	singleResource /* control descriptor */
 };
 
+resource rWindParam1 (kFindWindow) {
+	/*fAlert + */ fVis + fFlex,
+	0, /* title id */
+	0x0,
+	{0, 0, 0, 0},
+	kURLWindow, /* color table */
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	{0, 0},
+	0,
+	0,
+	{50, 40, 70, 600}, /* wPosition */
+	infront,
+	kFindLineEdit, /* rControlList */
+	(refIsResource << 10) + /* color table */
+	(refIsPtr << 8) + /* title */ 
+	singleResource /* control descriptor */
+};
+
+
 #define SearchWindowWidth (600-40)
 resource rWindParam1 (kSearchWindow) {
 	/*fAlert + */ fVis + fFlex,
@@ -685,8 +707,6 @@ resource rWindParam1 (kSearchWindow) {
 	(refIsPtr << 8) + /* title */ 
 	ResourceToResource /* control descriptor */
 };
-
-
 
 
 resource rControlList(kSearchWindow) {
@@ -786,6 +806,26 @@ resource rControlTemplate (kGopherURL) {
 		}
 	}
 };
+
+
+resource rControlTemplate (kFindLineEdit) {
+	kFindLineEdit,
+	// {3, 4, 17, 556 },
+	{ -1, -2, 21, 560+2 },
+	editLineControl {
+		 {	/* optional Fields */
+			0x0, /* flags */
+			FctlCanBeTarget+FctlWantsEvents+FctlProcNotPtr, /* more flags */
+			0x0, /* ref con */
+			32, /* max size */
+			0, /* default text */
+			-1 /* password char (not a password field) */
+			//0 /* leKeyIsNonControl */ /* classify key filter */
+		}
+	}
+};
+
+
 
 #define fListString 0x0001
 #define fListSelect 0x0002
