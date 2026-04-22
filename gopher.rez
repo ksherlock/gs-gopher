@@ -677,7 +677,7 @@ resource rWindParam1 (kFindWindow) {
 	{0, 0},
 	0,
 	0,
-	{50, 40, 70, 600}, /* wPosition */
+	{50, 140, 70, 500}, /* wPosition */
 	infront,
 	kFindLineEdit, /* rControlList */
 	(refIsResource << 10) + /* color table */
@@ -810,8 +810,7 @@ resource rControlTemplate (kGopherURL) {
 
 resource rControlTemplate (kFindLineEdit) {
 	kFindLineEdit,
-	// {3, 4, 17, 556 },
-	{ -1, -2, 21, 560+2 },
+	{ -1, -2, 21, 360+2 },
 	editLineControl {
 		 {	/* optional Fields */
 			0x0, /* flags */
