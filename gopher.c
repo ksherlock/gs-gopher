@@ -1647,8 +1647,9 @@ void DoSelectAll(void) {
 
 }
 
-static Str32 findstring;
-GSString32 cifindstring;
+#pragma debug 0x8000
+
+static Str32 FindString;
 
 unsigned GetFindString(void) {
 
@@ -1662,8 +1663,8 @@ unsigned GetFindString(void) {
 
 	ctrlH = GetCtlHandleFromID(win, kFindLineEdit);
 	leH = (LERecHndl)GetCtlTitle(ctrlH);
-	if (findstring.textLength)
-		SetLETextByID(win, kFindLineEdit, (StringPtr)&findstring);
+	if (FindString.textLength)
+		SetLETextByID(win, kFindLineEdit, (StringPtr)&FindString);
 
 
 	unsigned quit = 0;
@@ -1691,7 +1692,7 @@ unsigned GetFindString(void) {
 					quit = 1;
 					break;
 				case kOpenReturn:
-					GetLETextByID(win, kFindLineEdit, (StringPtr)&findstring);
+					GetLETextByID(win, kFindLineEdit, (StringPtr)&FindString);
 					quit = 2;
 					break;
 			}
@@ -1710,16 +1711,21 @@ unsigned GetFindString(void) {
 }
 
 
+extern void kmp_setup(const char *);
+extern long kmp_search(const char *text, unsigned long length, unsigned long offset);
+
+
 long FindCommon(unsigned again) {
 
 	Handle teH;
 	unsigned long size;
-	unsigned long i;
-	unsigned long max;
+	// unsigned long i;
+	// unsigned long max;
 	char *ptr;
-	unsigned cc;
-	unsigned j;
-	unsigned long pos = -1;
+	// unsigned cc;
+	// unsigned j;
+	long pos = -1;
+
 
 	GrafPortPtr win = FrontWindow();
 
@@ -1729,39 +1735,50 @@ long FindCommon(unsigned again) {
 
 	if (_toolErr || !teH) return pos;
 
-	// for FindNext, start from previous pos
+
+	WaitCursor();
+
+	text_cookie *cookie = (text_cookie *)GetWRefCon(win);
+
 	Handle textH = 0;
 	size = TEGetText(0b11101, (Ref)&textH, 0, 0, 0, teH);
 	HLock(textH);
 	ptr = *textH;
 
-	max = size - cifindstring.length;
-	if ((long)size < 0) return pos;
-	cc = cifindstring.text[0];
 
-	// todo -- optimize outer loop to use 16-bit ix
-	for (i = 0; i < max; ++i) {
-		unsigned c = *ptr++;
-		if (c >= 'A' && c <= 'Z') c |= 0x20;
-		if (c != cc) continue;
-		for (j = 1; j < cifindstring.length; ++j) {
-			c = ptr[j];
-			if (c >= 'A' && c <= 'Z') c |= 0x20;
-			if (c != cifindstring.text[j]) break;
-		}
-		if (j == cifindstring.length) {
-			pos = i;
-			break;
-		}
+
+	// FindNext - start from previous pos
+	pos = 0;
+	if (again) {
+		pos = cookie->searchPos;
 	}
+	pos = kmp_search(ptr, size, pos);
 	DisposeHandle(textH);
-	if (pos == -1) {
-		SysBeep2(sbBadInputValue);
-		return pos; // not found
-	}
-	TESetSelection((Pointer)pos, (Pointer)pos + cifindstring.length, teH);
-	// store search pos in the cookie?
 
+	if (pos < 0) {
+		SysBeep2(sbBadInputValue);
+		if (again) {
+			cookie->searchPos = 0; // reset		
+		}
+	} else {
+		// long vert;
+		// long horz;
+		TESetSelection((Pointer)pos, (Pointer)pos + FindString.textLength, teH);
+		// todo -- scroll into view!
+		// TEOffsetToPoint(pos, &vert, &horz, teH);
+		// TODO -- check if vert is visible, only scroll if offscreen.
+		// **teH.viewRect?
+		// **teH.theBufferVPos?
+
+		#if 0
+		// center in window.
+		TEScroll(1, pos, 0, teH);
+		#endif
+		pos += FindString.textLength;
+		cookie->searchPos = pos;
+	}
+
+	InitCursor();
 	return pos;
 }
 
@@ -1770,24 +1787,19 @@ void DoFind(void) {
 	if (!GetFindString()) {
 		return;
 	}
-	cifindstring.length = findstring.textLength;
-	for (unsigned i = 0; i < cifindstring.length; ++i) {
-		unsigned c = findstring.text[i];
-		if (c >= 'A' && c <= 'Z') c |= 0x20;
-		cifindstring.text[i] = c;
-	}
-
+	kmp_setup((char *)&FindString);
 	FindCommon(0);
 }
 
 void DoFindNext(void) {
-	if (!cifindstring.length) {
+	if (!FindString.textLength) {
 		SysBeep2(sbBadInputValue);
 		return;
 	}
 
 	FindCommon(1);
 }
+#pragma debug 0
 
 
 

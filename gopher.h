@@ -61,6 +61,7 @@ typedef struct text_cookie {
 	unsigned flags;
 	char *title;
 	//
+	long searchPos;
 	char data[1];
 } text_cookie;
 

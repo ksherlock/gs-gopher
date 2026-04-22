@@ -12,7 +12,7 @@ LDFLAGS =
 LDLIBS =
 
 
-OBJS = o/gopher.o o/q.o o/hierarchic.o o/binscii.o o/crc.o
+OBJS = o/gopher.o o/q.o o/hierarchic.o o/binscii.o o/crc.o o/kmp.o
 
 ROBJ = o/gopher.r
 
@@ -42,6 +42,7 @@ o/gopher-url.o: gopher-url.c gopher.h
 o/hierarchic.o: hierarchic.c hierarchic.h
 o/binscii.o : binscii.c
 o/crc.o : crc.asm crc.mac
+o/kmp.o: kmp.c
 
 
 o/gopher.r: gopher.rez defines.h stringctrl
