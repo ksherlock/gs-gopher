@@ -1761,11 +1761,18 @@ long FindCommon(unsigned again) {
 			cookie->searchPos = 0; // reset		
 		}
 	} else {
-		// long vert;
-		// long horz;
+		long vert;
+		long horz;
+		unsigned h;
+
+
+		h = (**(TERecordHndl)teH).viewRect.v2 - (**(TERecordHndl)teH).viewRect.v1;
+		// 
 		TESetSelection((Pointer)pos, (Pointer)pos + FindString.textLength, teH);
-		// todo -- scroll into view!
-		// TEOffsetToPoint(pos, &vert, &horz, teH);
+		TEOffsetToPoint(pos, &vert, &horz, teH);
+		if (vert < 0 || vert + 16 > h) {
+			TEScroll(1, pos, 0, teH);
+		}
 		// TODO -- check if vert is visible, only scroll if offscreen.
 		// **teH.viewRect?
 		// **teH.theBufferVPos?
