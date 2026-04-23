@@ -184,6 +184,8 @@ resource rMenu (kWindowMID, nocrossbank){
 	0xA008 | rmDisabled,
 	kWindowMID,
 	{
+		kNextWindowItem,
+		kDivider
 	};
 };
 
@@ -517,6 +519,17 @@ resource rMenuItem (kAddBookmarkItem, nocrossbank)
     kAddBookmarkItem
 };
 
+resource rMenuItem (kNextWindowItem, nocrossbank){
+    kNextWindowItem,
+    "~",
+    "`",
+    0,
+    0x8000 | rMIDisabled,
+    kNextWindowItem
+};
+
+
+
 resource rMenuItem (kDivider)	{
 	kDivider,
 	"",
@@ -570,6 +583,9 @@ resource rPString (kTab8Item, nocrossbank){"Tab Stops: 8"};
 resource rPString (kEncoding1Item, nocrossbank){"Encoding: MacRoman"};
 resource rPString (kEncoding2Item, nocrossbank){"Encoding: UTF"};
 resource rPString (kBinsciiItem, nocrossbank){"Decode BinSCII"};
+
+
+resource rPString (kNextWindowItem, nocrossbank){"Next Window"};
 
 
 resource rPString (kH_TabItem, nocrossbank){ $$Format("Tab Stops{*r%08x", kH_TabItem) };

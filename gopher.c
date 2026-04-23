@@ -58,6 +58,7 @@ static Pointer Icons[5];
 
 GrafPortPtr Windows[kMaxWindows];
 unsigned WindowBits = 0;
+unsigned WindowCount = 0;
 
 unsigned MenuWidth = 0;
 
@@ -259,7 +260,7 @@ void MenuUpdate(struct cookie *cookie) {
 		EnableMItem(kAddBookmarkItem);
 	}
 
-	prevMItem = cookie->menuID + WindowBase;
+	prevMItem = cookie->menuID + kWindowItem;
 	CheckMItem(1, prevMItem);
 }
 
@@ -725,6 +726,7 @@ static void Setup(void) {
 
 
 	WindowBits = 0;
+	WindowCount = 0;
 
 	if (TCPIPGetConnectStatus()) {
 		NetworkUpdate(1);
@@ -1442,6 +1444,52 @@ static pascal void KeyFilter(Handle teH, unsigned type) {
 #pragma toolparms 0
 #pragma databank 0
 
+void DoNextWindow(void) {
+
+	// so here's the deal...
+	// SelectWindow alters the linked list order, 
+	// so the window manager (GetNextWindow())
+	// won't keep track for us.
+
+	GrafPortPtr win = FrontWindow();
+
+	if (!win) return; // shouldn't happen...
+	if (WindowCount < 2) return;
+
+	// special case if this is an NDA window...
+	if (GetSysWFlag(win)) {
+
+		win = GetFirstWindow();
+		while (win && GetSysWFlag(win)) {
+			win = GetNextWindow(win);			
+		}
+
+		if (win) {
+			SelectWindow(win);
+			WindowChange();
+		}
+		return;
+	}
+
+
+	struct cookie *cookie = (struct cookie *)GetWRefCon(win);
+	unsigned id = cookie->menuID;
+	win = 0;
+
+	for (unsigned j = id + 1; j < kMaxWindows; ++j) {
+		if ((win = Windows[j])) break;
+	}
+
+	if (!win) for (unsigned j = 0; j < id; ++j) {
+		if ((win = Windows[j])) break;
+	}
+
+	if (win) {
+		SelectWindow(win);
+		WindowChange();
+	}
+}
+
 
 // update the Windows menu....
 void AddWindow(GrafPortPtr win, struct cookie *cookie) {
@@ -1455,14 +1503,19 @@ void AddWindow(GrafPortPtr win, struct cookie *cookie) {
 	}
 
 	template.itemTitleRef = (Ref)cookie->title;
-	template.itemID = WindowBase + id;
+	template.itemID = kWindowItem + id;
 
 	cookie->menuID = id;
 	Windows[id] = win;
 	WindowBits |= mask;
+	WindowCount++;
 
 	InsertMItem2(refIsPointer, (Ref)&template, 0xffff, kWindowMID);
 	CalcMenuSize(0, 0, kWindowMID);
+
+	if (WindowCount >= 2) {
+		EnableMItem(kNextWindowItem);
+	}
 
 	if (WindowBits == 1) {
 		SetMenuFlag(enableMenu, kWindowMID);
@@ -1475,19 +1528,23 @@ void AddWindow(GrafPortPtr win, struct cookie *cookie) {
 void RemoveWindow(struct cookie *cookie) {
 	unsigned id = cookie->menuID;
 
-	DeleteMItem(id + WindowBase);
+	DeleteMItem(id + kWindowItem);
 	CalcMenuSize(0, 0, kWindowMID);
 
 	Windows[id] = NULL;
 	WindowBits &= ~(1 << id);
+	WindowCount--;
 
+
+	if (WindowCount < 2) {
+		DisableMItem(kNextWindowItem);
+	}
 
 	if (WindowBits == 0) {
 		SetMenuFlag(disableMenu, kWindowMID);
 		HiliteMenu(0, kWindowMID);
 		// DrawMenuBar();
 	}
-
 }
 
 void NewTextWindow(text_cookie *cookie, void *text, unsigned long length) {
@@ -2050,11 +2107,15 @@ void DoMenu(void) {
 		case kNetworkStatusItem:
 			DoNetwork();
 			break;
+
+		case kNextWindowItem:
+			DoNextWindow();
+			break;
 	}
 
 	// handle window selection.
-	if (menu == kWindowMID) {
-		unsigned id = item - WindowBase;
+	if (menu == kWindowMID && item >= kWindowItem) {
+		unsigned id = item - kWindowItem;
 		if (id < kMaxWindows) {
 			SelectWindow(Windows[id]);
 		}

@@ -51,6 +51,10 @@
 #define kEncoding2Item TextBase+5
 #define kBinsciiItem TextBase+6
 
+#define kNextWindowItem WindowBase+0
+#define kWindowItem (WindowBase|0x100)
+
+
 #define kH_TabItem H_TextBase+0
 #define kH_Tab4Item H_TextBase+1
 #define kH_Tab8Item H_TextBase+2
